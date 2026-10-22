@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CS 4 Ecommerce Quiz</title>
+<title>CS 4 Exam</title>
 <style>
   body { font-family: system-ui, Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 16px; color: #222; }
   .card { max-width: 760px; margin: 0 auto; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
@@ -17,22 +17,16 @@
   .msg { color: #b91c1c; margin-top: 10px; }
   .score { font-size: 44px; font-weight: bold; text-align: center; color: #2563eb; margin: 20px 0 6px; }
   .center { text-align: center; }
+  .ok { color: #166534; margin-top: 10px; }
 </style>
 </head>
 <body>
 <div class="card" id="app"></div>
 
 <script>
-// ============================================================
-// PASTE YOUR WEB APP URL BELOW (the one ending in /exec).
-// Get it from Deploy > Manage deployments > Web app URL.
-// ============================================================
-const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzJCpmGNgLl3fGWfu4E0lpFgC_6asWSSsGqwEiKv3gpBC-FziXfeTF4uVqEsFB9VIC7/exec';
-
-// If the placeholder above is still there, the server fills in its own URL instead.
-const API_URL = ENDPOINT.indexOf('https://script.google.com/macros/s/AKfycbzJCpmGNgLl3fGWfu4E0lpFgC_6asWSSsGqwEiKv3gpBC-FziXfeTF4uVqEsFB9VIC7/exec') === -1
-  ? ENDPOINT
-  : '<?!= endpoint ?>';
+// The server fills in its own web app URL, so the page always calls
+// the deployment it was opened from.
+const API_URL = '<?!= endpoint ?>';
 
 const EXAM_TITLE = 'CS 4 Exam: Security Governance & Legal Issues';
 const EXAM_MINUTES = 60;
@@ -46,15 +40,33 @@ function esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-// Calls the web app URL. Uses text/plain so the browser sends no preflight request.
-async function api(action, data) {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(Object.assign({ action: action }, data))
+// Calls the server with JSONP: the response loads through a <script> tag, which
+// avoids the CORS limits that block fetch() responses from Apps Script.
+function api(action, data) {
+  return new Promise((resolve, reject) => {
+    const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    const params = new URLSearchParams();
+    params.append('action', action);
+    params.append('callback', cb);
+    Object.keys(data || {}).forEach(k => {
+      const v = data[k];
+      params.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    });
+
+    const s = document.createElement('script');
+    const timer = setTimeout(() => { cleanup(); reject(new Error('No response from server')); }, 60000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cb];
+      s.remove();
+    }
+
+    window[cb] = r => { cleanup(); resolve(r); };
+    s.onerror = () => { cleanup(); reject(new Error('Could not reach the server')); };
+    s.src = API_URL + '?' + params.toString();
+    document.body.appendChild(s);
   });
-  if (!res.ok) throw new Error('Server responded with ' + res.status);
-  return res.json();
 }
 
 // ---------- LOGIN ----------
@@ -105,7 +117,7 @@ function renderExam(saved) {
     html += `
       <div class="q">
         <label for="a${i}">${i + 1}. ${esc(q)}</label>
-        <input type="text" id="a${i}" autocomplete="off">
+        <input type="text" id="a${i}" maxlength="150" autocomplete="off">
       </div>`;
   });
 
@@ -168,21 +180,95 @@ async function submitExam(auto) {
 }
 
 // ---------- RESULT ----------
+// r.score is null when the teacher has hidden scores, so only the message is shown.
+// ---------- RESULT ----------
+// r.score is null when the teacher has hidden scores, so only the message is shown.
 function renderResult(r) {
   window.onbeforeunload = null;
   clearInterval(state.timer);
   clearInterval(state.saveTimer);
-  const pct = r.total ? Math.round((r.score / r.total) * 100) : 0;
+  const hasScore = r.score !== null && r.score !== undefined;
+  const pct = hasScore && r.total ? Math.round((r.score / r.total) * 100) : 0;
   show(`
     <h1>Exam Result</h1>
     <p class="center">${esc(r.name)} &middot; ${esc(r.no)}</p>
-    <div class="score">${esc(r.score)} / ${esc(r.total)}</div>
-    <p class="center">${pct}%</p>
+    ${hasScore ? `<div class="score">${esc(r.score)} / ${esc(r.total)}</div><p class="center">${pct}%</p>` : ''}
     ${r.message ? `<p class="center">${esc(r.message)}</p>` : ''}
+    <div class="center" style="margin-top:18px"><button id="dl">Download my results</button></div>
+    <div class="center" id="dlmsg"></div>
     <p class="center">You may close this page now.</p>
   `);
+  $('dl').onclick = () => downloadResult(r.no);
 }
 
+// Asks the server for this student's own answers, then saves them as an HTML file.
+async function downloadResult(no) {
+  const btn = $('dl');
+  const msg = $('dlmsg');
+  btn.disabled = true;
+  msg.className = 'ok';
+  msg.textContent = 'Preparing your result...';
+
+  try {
+    const r = await api('result', { studentNo: no });
+    if (!r.ok) throw new Error(r.message || 'Could not get your result.');
+
+    const blob = new Blob([buildResultHtml(r)], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Exam_Result_' + r.no + '.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+    msg.className = 'ok';
+    msg.textContent = 'Your result was downloaded. Open the file and choose Print > Save as PDF if you need a PDF.';
+  } catch (e) {
+    msg.className = 'msg';
+    msg.textContent = 'Could not download: ' + e.message;
+  }
+  btn.disabled = false;
+}
+
+// Builds the result file: the student's answers, plus marks only if scores are released.
+function buildResultHtml(r) {
+  const rows = r.items.map(it => {
+    const mark = it.correct === null
+      ? ''
+      : (it.correct ? '<td class="good">Correct</td>' : '<td class="bad">Incorrect</td>');
+    return `<tr><td>${it.no}</td><td>${esc(it.question)}</td><td>${esc(it.answer || '(no answer)')}</td>${mark}</tr>`;
+  }).join('');
+
+  const scoreLine = r.showScore
+    ? `<p class="score">${esc(r.score)} / ${esc(r.total)}</p>`
+    : '';
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Exam Result</title>
+<style>
+  body { font-family: Arial, sans-serif; color: #111; max-width: 800px; margin: 24px auto; padding: 0 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .meta { color: #555; margin-bottom: 12px; }
+  .score { font-size: 28px; font-weight: bold; color: #2563eb; margin: 12px 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; font-size: 14px; }
+  th { background: #e5e7eb; }
+  .good { color: #166534; font-weight: bold; }
+  .bad { color: #b91c1c; font-weight: bold; }
+</style></head><body>
+<h1>${esc(EXAM_TITLE)}</h1>
+<div class="meta">
+  ${esc(r.name)} &middot; ${esc(r.no)}${r.section ? ' &middot; ' + esc(r.section) : ''}<br>
+  Submitted: ${esc(r.submittedAt)}
+</div>
+${scoreLine}
+<table>
+  <tr><th>No.</th><th>Question</th><th>Your answer</th>${r.showScore ? '<th>Result</th>' : ''}</tr>
+  ${rows}
+</table>
+</body></html>`;
+}
 // Start: the page loads with an empty login form.
 renderLogin('');
 </script>
