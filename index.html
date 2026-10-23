@@ -1,606 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS 4 Exam</title>
+<style>
+  body { font-family: system-ui, Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 16px; color: #222; }
+  .card { max-width: 760px; margin: 0 auto; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  h1 { font-size: 20px; margin: 0 0 10px; }
+  input[type=text] { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #bbb; border-radius: 6px; box-sizing: border-box; }
+  button { background: #2563eb; color: #fff; border: 0; border-radius: 6px; padding: 10px 18px; font-size: 16px; cursor: pointer; }
+  button:disabled { background: #9ca3af; cursor: default; }
+  .q { margin: 14px 0; }
+  .q label { font-weight: 600; display: block; margin-bottom: 6px; }
+  #timer { position: sticky; top: 0; background: #111; color: #fff; padding: 10px; border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 12px; z-index: 1; }
+  .msg { color: #b91c1c; margin-top: 10px; }
+  .score { font-size: 44px; font-weight: bold; text-align: center; color: #2563eb; margin: 20px 0 6px; }
+  .center { text-align: center; }
+  .ok { color: #166534; margin-top: 10px; }
+  .qa { border-top: 1px solid #e5e7eb; padding: 10px 0; text-align: left; }
+  .qa .good { color: #166534; font-weight: bold; }
+  .qa .bad { color: #b91c1c; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="card" id="app"></div>
+
+<script>
+// The server fills in its own web app URL, so the page always calls
+// the deployment it was opened from.
+const API_URL = 'https://script.google.com/macros/s/AKfycbzOwOrO2rBkM4XFjyvuyQbCshQCM2mqo_GxHUXV9Rgh0BeA0VPk9O-NCRA6UOPbSh96/exec';
+
 const EXAM_TITLE = 'CS 4 Exam: Security Governance & Legal Issues';
 const EXAM_MINUTES = 60;
-const GRACE_SECONDS = 30;
-const ROSTER_SHEET = 'Roster';
-const ATTEMPTS_SHEET = 'Attempts';
-const ALLOW_RESULT_DOWNLOAD = true;
-const SHOW_SCORE_TO_STUDENT = true;
 
-// Set to true only if students should see their score right after submitting.
-//const SHOW_SCORE_TO_STUDENT = false;
+const state = { no: '', name: '', questions: [], endAt: 0, timer: null, saveTimer: null, done: false, submitting: false };
 
-// Optional: Drive folder ID for the teacher's report (the part after /folders/ in the URL). Leave '' for My Drive root.
-const DRIVE_FOLDER_ID = '19KRaSyizByuCSlCwsa_5Wmky8Mv6cIbP';
+function $(id) { return document.getElementById(id); }
+function show(html) { $('app').innerHTML = html; }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
-// Paste your spreadsheet ID here (the part between /d/ and /edit in the Sheet's URL).
-const SPREADSHEET_ID = '1nteAIgW53srMSc6zR5dzPahFLHUgouZJcShVrJu3PC4';
+// Calls the server with JSONP: the response loads through a <script> tag, which
+// avoids the CORS limits that block fetch() responses from Apps Script.
+function api(action, data) {
+  return new Promise((resolve, reject) => {
+    const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    const params = new URLSearchParams();
+    params.append('action', action);
+    params.append('callback', cb);
+    Object.keys(data || {}).forEach(k => {
+      const v = data[k];
+      params.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    });
 
-// ---------- EXAM CONTENT (answers stay on the server) ----------
-const QUESTIONS = [
-  { q: "What is the framework of policies, roles, and decision-making authority that directs cybersecurity management called?", a: ["governance", "it governance", "cybersecurity governance"] },
-  { q: "What process involves identifying, assessing, and treating risks to keep exposure within acceptable tolerance levels?", a: ["risk management"] },
-  { q: "What term defines the adherence to mandatory external laws, regulatory mandates, industry standards, and internal policies?", a: ["compliance"] },
-  { q: "In the governance hierarchy, what mandatory, high-level overarching statements are set by senior executive leadership to define \"what\" and \"why\"?", a: ["policy", "policies"] },
-  { q: "In the governance hierarchy, what mandatory specific and measurable requirements are used to enforce policies consistently?", a: ["standard", "standards"] },
-  { q: "In the governance hierarchy, what term describes step-by-step instructions and operational workflows detailing exactly \"how to\" accomplish tasks?", a: ["procedure", "procedures", "sop", "standard operating procedure"] },
-  { q: "In the governance hierarchy, what optional level provides recommended best-practice advice and discretionary guidance for scenarios without strict mandates?", a: ["guideline", "guidelines"] },
-  { q: "Which core risk treatment option involves completely eliminating a risk by discontinuing or avoiding the business activity causing it?", a: ["avoid", "avoidance", "risk avoidance"] },
-  { q: "Which core risk treatment option involves shifting financial or operational risk to a third party, such as through cyber insurance or outsourcing?", a: ["transfer", "risk transfer"] },
-  { q: "Which core risk treatment option involves implementing security controls and safeguards to reduce the likelihood or impact of a risk?", a: ["mitigate", "mitigation", "risk mitigation"] },
-  { q: "Which core risk treatment option involves acknowledging and absorbing a risk without further action when the cost of treatment exceeds the risk impact?", a: ["accept", "acceptance", "risk acceptance"] },
-  { q: "What practice focuses on keeping overall business operations running during or after a disruption across the whole organization?", a: ["business continuity", "bc", "business continuity planning"] },
-  { q: "What practice focuses specifically on restoring technical IT systems, server infrastructure, and network assets after a disruption?", a: ["disaster recovery", "dr", "disaster recovery planning"] },
-  { q: "What BC/DR metric defines the maximum acceptable duration that systems can remain down before recovery?", a: ["recovery time objective", "rto"] },
-  { q: "What BC/DR metric defines the maximum acceptable data loss measured in time, which determines backup frequency?", a: ["recovery point objective", "rpo"] },
-  { q: "What BC/DR metric defines the longest period a function can fail before irreparable organizational damage occurs?", a: ["maximum tolerable downtime", "mtd"] },
-  { q: "What analysis process identifies critical business functions and sets RTO, RPO, and MTD values?", a: ["business impact analysis", "bia"] },
-  { q: "What design approach ensures continuous system operation with minimal downtime, targeting a reliability level often described as \"five nines\"?", a: ["high availability", "ha"] },
-  { q: "What system capability allows it to continue operating seamlessly even when a hardware component fails?", a: ["fault tolerance", "fault tolerant"] },
-  { q: "What term describes any single component whose failure will bring down an entire system?", a: ["single point of failure", "spof"] },
-  { q: "What type of alternative recovery site is fully equipped with servers, hardware, and networks with near real-time data replication?", a: ["hot site", "hot"] },
-  { q: "What type of alternative recovery site is partially equipped with operational core infrastructure and periodic backup synchronization?", a: ["warm site", "warm"] },
-  { q: "What type of alternative recovery site consists only of a basic facility (power, space, HVAC, wiring) with no pre-installed data or hardware?", a: ["cold site", "cold"] },
-  { q: "What specific type of targeted social engineering attack focuses exclusively on C-suite executives via email?", a: ["whaling", "whaling attack"] },
-  { q: "What form of social engineering uses voice-based phone deception to extract information?", a: ["vishing", "voice phishing"] },
-  { q: "What physical security breach method involves an unauthorized person following closely behind an authorized employee to gain entry?", a: ["tailgating", "piggybacking", "tailgating piggybacking"] },
-  { q: "What type of metric acts as an early warning signal of risk exposure to predict and highlight potential future problems?", a: ["key risk indicator", "kri"] },
-  { q: "What real-time, interactive, visual monitoring tool provides live metric tracking for technical security staff?", a: ["dashboard"] },
-  { q: "What periodic management summary uses red, yellow, and green visual indicators to measure performance against goals?", a: ["scorecard", "score card"] },
-  { q: "What technology utilizes asymmetric key pairs (a private key to sign and a public key to verify) to guarantee document authenticity and integrity?", a: ["public key infrastructure", "pki"] },
-  { q: "What legal property of digital signatures prevents senders from denying the origin of an electronic document once signed?", a: ["non-repudiation", "non repudiation", "nonrepudiation"] },
-  { q: "What automated B2B transaction framework replaces standard paper purchase orders and establishes rules of formation and risk allocation between trading partners?", a: ["edi", "electronic data interchange", "trading partner agreement", "trading partner agreements", "tpa", "edi tpa"] },
-  { q: "What landmark Philippine legislation enacted in June 2000 established legal recognition for digital transactions and electronic data messages?", a: ["republic act 8792", "republic act no 8792", "ra 8792", "ra8792", "e-commerce act", "philippine e-commerce act"] },
-  { q: "Under Section 30 of Republic Act Number 8792, what type of protection is granted to service providers regarding third-party content, provided they do not initiate or alter data?", a: ["conditional immunity"] },
-  { q: "What section of Republic Act Number 8792 explicitly criminalizes unauthorized system penetration (hacking and cracking) and digital piracy?", a: ["33", "section 33", "sec 33"] }
-];
+    const s = document.createElement('script');
+    const timer = setTimeout(() => { cleanup(); reject(new Error('No response from server')); }, 60000);
 
-// ---------- STUDENT ROSTER ----------
-const ROSTER_CS41 = [
-  ['202334096', 'BACANI, PATRICK JEROME'],
-  ['202334091', 'BATAC, MARY RUTH'],
-  ['202334088', 'CANTAL, HENKEPECK'],
-  ['202334004', 'CAPIRAL, LUIS GABRIEL'],
-  ['202334053', 'CO, KHURT LUIS'],
-  ['202334061', 'CORALES, CHARLIZ DANA'],
-  ['202334028', 'CORDOVA, VENELYN MAE'],
-  ['202334059', 'CRUZ, JOSHUA CARVEY'],
-  ['202334032', 'CRUZ, KRYZEL CASSANDRA'],
-  ['202334082', 'DE MESA, RITA ANGELI'],
-  ['202334036', 'FRIAS, RAILEY MIGUEL'],
-  ['202334037', 'GOYENA, SHAWN KIEFFER'],
-  ['202334062', 'ICBAN, JEPHTHA'],
-  ['202334015', 'KING, MARIANO LUIZ'],
-  ['202334043', 'MANGUNI, JOHN GABRIEL'],
-  ['202334090', 'MANIQUIS, RINOA JASMINE'],
-  ['202334046', 'MATANGA, SOPHIA VIEN'],
-  ['202334073', 'MUSNI, LORELIE JOY'],
-  ['202334071', 'NAVARRO, SOFIA ALEXI'],
-  ['202334060', 'PACOMIO, ADAM COLIN ZACHARY'],
-  ['202334039', 'PAJARITO, ROSE KRISHNA CASSANDRA'],
-  ['202334021', 'PALCOTO, RUSSELL ANDREW'],
-  ['202334057', 'PANGANIBAN, SHERWIN'],
-  ['202334052', 'PEÑAFIEL, DANIELLA'],
-  ['202102596', 'RAMOS, JHAPET'],
-  ['202334068', 'RANCE, CARL JULLIAN'],
-  ['202334079', 'REYES, JOHN ANDREI'],
-  ['202334070', 'RODERO, KARLORENZO'],
-  ['202334049', 'SEGOVIA, ALIYAH LOISE'],
-  ['202334011', 'SIBAYAN, JOAN'],
-  ['202334045', 'VERDIDA, MAVERICK ISAIAH'],
-  ['202334012', 'YUPANO, DENESSE ADRIELLE']
-];
-
-const ROSTER_CS43 = [
-  ['202334050', 'ABUNDO, JONALENE RYZA'],
-  ['202334001', 'ALISWAG, KARYLLE VINCES'],
-  ['202334017', 'BALBOA, MARC JEROME'],
-  ['202334033', 'CAMACHO, DANIEL HARDY'],
-  ['202334103', 'CATACUTAN, RAPHAEL JAMES'],
-  ['202334023', 'CAYACAP, FAITH ALECZES'],
-  ['202334042', 'DALANGIN, HERSHEY ANNE'],
-  ['202334013', 'DE VERA, RAY ARVIN'],
-  ['202334048', 'DEL ROSARIO, JUANA MARI'],
-  ['202334025', 'DELOS SANTOS, CHRISTIAN ROCH'],
-  ['202334078', 'DIESTA, RAYMART'],
-  ['202334098', 'GERONA, MARC CEDRIC'],
-  ['202334077', 'GERONIMO, MARK JEROME'],
-  ['202102412', 'IBO, DANIELLA YSABELLE'],
-  ['202102552', 'ILASIN, LAUREN AUBREY'],
-  ['202334007', 'IWAG, JOHN MICHAEL'],
-  ['202252030', 'LAO, JIECO ANDRES'],
-  ['202334099', 'LIBANG, MICHAEL ANGELO'],
-  ['202334029', 'MABUTAS, CARLA'],
-  ['202334008', 'MAGAAN, FRIEDA MARIE'],
-  ['202334019', 'MULLENO, JESHAIAH MAE'],
-  ['202334101', 'OLIVERIO, BRENAN DWAYNE'],
-  ['202334018', 'PEÑA, SYDNEY ANGELEVE'],
-  ['202334054', 'RAPIZ, JOSEPH PRINCE'],
-  ['202334067', 'RIVERA, RAMYLL'],
-  ['202334031', 'ROBANTE, FLOYD'],
-  ['202290051', 'SANCHEZ, TRICIA MAE'],
-  ['202334083', 'SANTOS, JANSEN JERHYN'],
-  ['202334066', 'TAN, HEZRON'],
-  ['202334044', 'VAFLOR, MARIEL KIM'],
-  ['202334051', 'VALENCIA, JIM RAFAEL']
-];
-
-// Combined roster with section labels
-const ROSTER = [
-  ...ROSTER_CS41.map(s => [s[0], s[1], 'CS 4-1']),
-  ...ROSTER_CS43.map(s => [s[0], s[1], 'CS 4-3'])
-];
-
-// ---------- WEB APP ENDPOINTS ----------
-
-// Page request: serves the exam. API request (?action=...): returns JSON or JSONP.
-// Only login, save, and submit are reachable from here. Reports are created in the editor only.
-function doGet(e) {
-  const p = (e && e.parameter) || {};
-  if (p.action) {
-    try {
-      ensureSetup_();
-      const d = Object.assign({}, p);
-      try { d.answers = JSON.parse(p.answers || '[]'); } catch (err) { d.answers = []; }
-      return json_(handle_(p.action, d), p.callback);
-    } catch (err) {
-      Logger.log(err);
-      return json_({ ok: false, message: 'Server error. Please try again or tell your teacher.' }, p.callback);
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cb];
+      s.remove();
     }
-  }
-  const t = HtmlService.createTemplateFromFile('Index');
-  t.endpoint = ScriptApp.getService().getUrl();
-  return t.evaluate()
-    .setTitle(EXAM_TITLE)
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
-}
 
-// API requests with a JSON body (kept for direct testing or other clients).
-function doPost(e) {
-  let body = {};
-  try {
-    ensureSetup_();
-    body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    return json_(handle_(body.action, body));
-  } catch (err) {
-    Logger.log(err);
-    return json_({ ok: false, message: 'Server error. Please try again or tell your teacher.' });
-  }
-}
-
-// Optional: run once from the Apps Script editor to approve permissions and create sheets now.
-function setupSheets() {
-  ensureSetup_();
-}
-
-// ---------- SPREADSHEET ACCESS ----------
-// Opens the exam spreadsheet by ID, so it works whether or not the script is bound to it.
-function ss_() {
-  return SpreadsheetApp.openById(SPREADSHEET_ID);
-}
-
-// ---------- AUTOMATIC SHEET CREATION ----------
-function ensureSetup_() {
-  if (setupOk_()) return;
-  const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
-  try {
-    createSetup_();
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-function setupOk_() {
-  const ss = ss_();
-  const r = ss.getSheetByName(ROSTER_SHEET);
-  const a = ss.getSheetByName(ATTEMPTS_SHEET);
-  return !!(r && a && a.getLastRow() >= 1 && r.getLastRow() >= ROSTER.length + 1);
-}
-
-function createSetup_() {
-  const ss = ss_();
-
-  let r = ss.getSheetByName(ROSTER_SHEET);
-  if (!r) r = ss.insertSheet(ROSTER_SHEET);
-  if (r.getLastRow() === 0) {
-    r.getRange(1, 1, 1, 3).setValues([['Student No', 'Student Name', 'Section']]).setFontWeight('bold');
-  }
-  r.getRange('A:A').setNumberFormat('@');
-
-  let a = ss.getSheetByName(ATTEMPTS_SHEET);
-  if (!a) a = ss.insertSheet(ATTEMPTS_SHEET);
-  if (a.getLastRow() === 0) {
-    a.getRange(1, 1, 1, 8)
-      .setValues([['Student No', 'Student Name', 'Section', 'Start Time', 'Status', 'Answers (JSON)', 'Score', 'Submitted At']])
-      .setFontWeight('bold');
-  }
-  a.getRange('A:A').setNumberFormat('@');
-
-  loadRoster_(r);
-}
-
-// Adds missing students and fills blank Section cells. Existing rows are never overwritten.
-function loadRoster_(r) {
-  const vals = r.getDataRange().getValues();
-  const rowByNo = {};
-  for (let i = 1; i < vals.length; i++) rowByNo[normNo_(vals[i][0])] = i + 1;
-
-  ROSTER.forEach(s => {
-    const row = rowByNo[s[0]];
-    if (row) {
-      if (!String(vals[row - 1][2] || '').trim()) r.getRange(row, 3).setValue(s[2]);
-    } else {
-      r.appendRow([s[0], s[1], s[2]]);
-    }
+    window[cb] = r => { cleanup(); resolve(r); };
+    s.onerror = () => { cleanup(); reject(new Error('Could not reach the server')); };
+    s.src = API_URL + '?' + params.toString();
+    document.body.appendChild(s);
   });
 }
 
-// ---------- API ----------
-// Students can only reach these three actions.
-function handle_(action, d) {
+// ---------- LOGIN ----------
+function renderLogin(msg) {
+  show(`
+    <h1>${esc(EXAM_TITLE)}</h1>
+    <p>Enter your student number. The exam is ${EXAM_MINUTES} minutes and the timer starts when you log in.</p>
+    <input type="text" id="sno" inputmode="numeric" placeholder="Student number" autocomplete="off">
+    <div style="margin-top:12px"><button id="go">Start / Resume</button></div>
+    <div class="msg" id="msg"></div>
+  `);
+  $('msg').textContent = msg || '';
+  $('go').onclick = doLogin;
+  $('sno').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+}
+
+async function doLogin() {
+  const no = $('sno').value.trim();
+  if (!no) { $('msg').textContent = 'Please enter your student number.'; return; }
+  $('go').disabled = true;
+  $('msg').textContent = 'Checking...';
   try {
-    d = d || {};
-    if (action === 'login') return login_(d.studentNo);
-    if (action === 'save') return saveProgress_(d.studentNo, d.answers);
-    if (action === 'submit') return submitExam_(d.studentNo, d.answers);
-    if (action === 'result') return myResult_(d.studentNo);
-    return { ok: false, message: 'Unknown action.' };
-  } catch (err) {
-    Logger.log(err);
-    return { ok: false, message: 'Server error. Please try again or tell your teacher.' };
+    onLogin(await api('login', { studentNo: no }));
+  } catch (e) {
+    $('go').disabled = false;
+    $('msg').textContent = 'Error: ' + e.message + '. Please try again.';
   }
 }
 
-// Returns JSON, or JSONP when a callback name is given. The name is checked so only a plain identifier is accepted.
-function json_(obj, callback) {
-  if (callback && /^[A-Za-z_][A-Za-z0-9_.]*$/.test(callback)) {
-    return ContentService.createTextOutput(callback + '(' + JSON.stringify(obj) + ');')
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-  return ContentService.createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+function onLogin(r) {
+  if (!r.ok) { renderLogin(r.message); return; }
+  if (r.submitted) { renderResult(r); return; }
+  state.no = r.no;
+  state.name = r.name;
+  state.questions = r.questions;
+  state.endAt = Date.now() + r.remaining * 1000;
+  renderExam(r.answers);
 }
-// Returns only the student's own submitted answers. The answer key is never included.
-function myResult_(studentNo) {
-  if (!ALLOW_RESULT_DOWNLOAD) return { ok: false, message: 'Result download is not available.' };
 
-  const no = normNo_(studentNo);
-  const st = findStudent_(no);
-  if (!st) return { ok: false, message: 'Student not found.' };
+// ---------- EXAM ----------
+function renderExam(saved) {
+  let html = `
+    <div id="timer">Time left: <span id="clock">--:--</span></div>
+    <h1>${esc(state.name)} &middot; ${esc(state.no)}</h1>
+    <p>Type your answer for each item. Answers are saved automatically.</p>`;
 
-  const sh = attemptsSheet_();
-  const row = findAttemptRow_(sh, no);
-  if (!row) return { ok: false, message: 'No exam record found.' };
+  state.questions.forEach((q, i) => {
+    html += `
+      <div class="q">
+        <label for="a${i}">${i + 1}. ${esc(q)}</label>
+        <input type="text" id="a${i}" maxlength="150" autocomplete="off">
+      </div>`;
+  });
 
-  const v = sh.getRange(row, 1, 1, 8).getValues()[0];
-  if (v[4] !== 'SUBMITTED') return { ok: false, message: 'Results are available after you submit the exam.' };
+  html += `
+    <button id="submit">Submit Exam</button>
+    <div class="msg" id="msg"></div>`;
 
-  const answers = safeParse_(v[5]);
-  const showScore = SHOW_SCORE_TO_STUDENT;
-  const submittedAt = v[7] instanceof Date
-    ? Utilities.formatDate(v[7], Session.getScriptTimeZone(), 'MMMM d, yyyy h:mm a')
+  show(html);
+  state.questions.forEach((_, i) => { $('a' + i).value = saved[i] || ''; });
+
+  $('submit').onclick = () => {
+    if (confirm('Submit your exam now? You cannot change your answers after submitting.')) submitExam(false);
+  };
+
+  window.onbeforeunload = () => state.done ? null : 'Your exam is still in progress.';
+  tick();
+  state.timer = setInterval(tick, 1000);
+  state.saveTimer = setInterval(autosave, 30000);
+}
+
+function getAnswers() {
+  return state.questions.map((_, i) => $('a' + i).value);
+}
+
+function tick() {
+  const left = Math.max(0, Math.round((state.endAt - Date.now()) / 1000));
+  const m = Math.floor(left / 60);
+  const s = String(left % 60).padStart(2, '0');
+  const el = $('clock');
+  if (el) el.textContent = `${m}:${s}`;
+  if (left <= 0 && !state.submitting) submitExam(true);
+}
+
+function autosave() {
+  if (state.done || state.submitting) return;
+  api('save', { studentNo: state.no, answers: getAnswers() }).catch(() => {});
+}
+
+async function submitExam(auto) {
+  if (state.submitting) return;
+  state.submitting = true;
+  clearInterval(state.timer);
+  clearInterval(state.saveTimer);
+  const b = $('submit');
+  if (b) b.disabled = true;
+  if ($('msg')) $('msg').textContent = auto ? 'Time is up. Submitting your answers...' : 'Submitting...';
+
+  try {
+    const r = await api('submit', { studentNo: state.no, answers: getAnswers() });
+    if (!r.ok) throw new Error(r.message || 'Submission was not accepted.');
+    state.done = true;
+    renderResult(r);
+  } catch (e) {
+    state.submitting = false;
+    if ($('msg')) $('msg').textContent = 'Submission failed: ' + e.message + '. Your answers are saved. Please try again.';
+    if (b) b.disabled = false;
+    state.timer = setInterval(tick, 1000);
+    state.saveTimer = setInterval(autosave, 30000);
+  }
+}
+
+// r.score is null when the teacher has hidden scores, so only the message is shown.
+function renderResult(r) {
+  window.onbeforeunload = null;
+  clearInterval(state.timer);
+  clearInterval(state.saveTimer);
+  const hasScore = r.score !== null && r.score !== undefined;
+  const pct = hasScore && r.total ? Math.round((r.score / r.total) * 100) : 0;
+
+  const itemsHtml = Array.isArray(r.items)
+    ? r.items.map(it => `
+        <div class="qa">
+          <div><b>${it.no}. ${esc(it.question)}</b></div>
+          <div>Your answer: ${esc(it.answer || '(no answer)')}
+            <span class="${it.correct ? 'good' : 'bad'}">${it.correct ? 'Correct' : 'Incorrect'}</span></div>
+          ${it.correct ? '' : `<div class="ok">Correct answer: ${esc(it.correctAnswer)}</div>`}
+        </div>`).join('')
     : '';
 
-  return {
-    ok: true,
-    no: st.no,
-    name: st.name,
-    section: st.section,
-    submittedAt: submittedAt,
-    showScore: showScore,
-    score: showScore ? Number(v[6]) : null,
-    total: showScore ? QUESTIONS.length : null,
-    items: QUESTIONS.map((q, i) => ({
-      no: i + 1,
-      question: q.q,
-      answer: answers[i],
-      correct: showScore ? isCorrect_(answers[i], q.a) : null
-    }))
-  };
+  show(`
+    <h1>Exam Result</h1>
+    <p class="center">${esc(r.name)} &middot; ${esc(r.no)}</p>
+    ${hasScore ? `<div class="score">${esc(r.score)} / ${esc(r.total)}</div><p class="center">${pct}%</p>` : ''}
+    ${r.message ? `<p class="center">${esc(r.message)}</p>` : ''}
+    ${itemsHtml}
+    <div class="center" style="margin-top:18px"><button id="dl">Download my results</button></div>
+    <div class="center" id="dlmsg"></div>
+    <p class="center">You may close this page now.</p>
+  `);
+  $('dl').onclick = () => downloadResult(r.no);
 }
-function login_(studentNo) {
-  const no = normNo_(studentNo);
-  const st = findStudent_(no);
-  if (!st) return { ok: false, message: 'Student number not found. Check your number or ask your teacher.' };
+// Asks the server for this student's own answers, then saves them as an HTML file.
+async function downloadResult(no) {
+  const btn = $('dl');
+  const msg = $('dlmsg');
+  btn.disabled = true;
+  msg.className = 'ok';
+  msg.textContent = 'Preparing your result...';
 
-  const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
   try {
-    const sh = attemptsSheet_();
-    const row = findAttemptRow_(sh, no);
-    const now = new Date();
+    const r = await api('result', { studentNo: no });
+    if (!r.ok) throw new Error(r.message || 'Could not get your result.');
 
-    if (!row) {
-      sh.appendRow([st.no, st.name, st.section, now, 'IN_PROGRESS', '[]', '', '']);
-      return startPayload_(st, cleanAnswers_([]), EXAM_MINUTES * 60);
-    }
+    const blob = new Blob([buildResultHtml(r)], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Exam_Result_' + r.no + '.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
 
-    const v = sh.getRange(row, 1, 1, 8).getValues()[0];
-    if (v[4] === 'SUBMITTED') {
-      return resultPayload_(st, Number(v[6]), '');
-      
-    }
-
-    const remaining = EXAM_MINUTES * 60 - (now - new Date(v[3])) / 1000;
-    if (remaining <= -GRACE_SECONDS) {
-      return finalize_(sh, row, st, safeParse_(v[5]));
-    }
-    return startPayload_(st, safeParse_(v[5]), remaining);
-  } finally {
-    lock.releaseLock();
+    msg.className = 'ok';
+    msg.textContent = 'Your result was downloaded. Open the file and choose Print > Save as PDF if you need a PDF.';
+  } catch (e) {
+    msg.className = 'msg';
+    msg.textContent = 'Could not download: ' + e.message;
   }
+  btn.disabled = false;
 }
 
-function saveProgress_(studentNo, answers) {
-  const no = normNo_(studentNo);
-  const sh = attemptsSheet_();
-  const row = findAttemptRow_(sh, no);
-  if (!row) return { ok: false };
+// Builds the result file: the student's answers, plus marks only if scores are released.
+function buildResultHtml(r) {
+  const rows = r.items.map(it => {
+    const mark = it.correct === null
+      ? ''
+      : (it.correct ? '<td class="good">Correct</td>' : '<td class="bad">Incorrect</td>');
+    return `<tr><td>${it.no}</td><td>${esc(it.question)}</td><td>${esc(it.answer || '(no answer)')}</td>${mark}</tr>`;
+  }).join('');
 
-  const v = sh.getRange(row, 1, 1, 8).getValues()[0];
-  if (v[4] !== 'IN_PROGRESS') return { ok: false };
-  const remaining = EXAM_MINUTES * 60 - (new Date() - new Date(v[3])) / 1000;
-  if (remaining <= -GRACE_SECONDS) return { ok: false, expired: true };
+  const scoreLine = r.showScore
+    ? `<p class="score">${esc(r.score)} / ${esc(r.total)}</p>`
+    : '';
 
-  sh.getRange(row, 6).setValue(JSON.stringify(cleanAnswers_(answers)));
-  return { ok: true };
-}
-
-function submitExam_(studentNo, answers) {
-  const no = normNo_(studentNo);
-  const st = findStudent_(no);
-  if (!st) return { ok: false, message: 'Student not found.' };
-
-  const sh = attemptsSheet_();
-  const row = findAttemptRow_(sh, no);
-  if (!row) return { ok: false, message: 'No active exam found. Please log in again.' };
-
-  const v = sh.getRange(row, 1, 1, 8).getValues()[0];
-  //if (v[4] === 'SUBMITTED') return resultPayload_(st, Number(v[6]), '');
-  if (v[4] === 'SUBMITTED') return resultPayload_(st, Number(v[6]), '', safeParse_(v[5]));
-  const remaining = EXAM_MINUTES * 60 - (new Date() - new Date(v[3])) / 1000;
-  // Within the grace period, use the latest answers. After it, use the last autosave.
-  const ans = remaining > -GRACE_SECONDS ? cleanAnswers_(answers) : safeParse_(v[5]);
-  return finalize_(sh, row, st, ans);
-}
-
-// ---------- HELPERS ----------
-function finalize_(sh, row, st, answers) {
-  let score = 0;
-  QUESTIONS.forEach((q, i) => { if (isCorrect_(answers[i], q.a)) score++; });
-  sh.getRange(row, 5, 1, 4).setValues([['SUBMITTED', JSON.stringify(answers), score, new Date()]]);
-  return resultPayload_(st, score, '', answers);
-}
-
-function startPayload_(st, answers, remaining) {
-  return {
-    ok: true,
-    submitted: false,
-    no: st.no,
-    name: st.name,
-    questions: QUESTIONS.map(x => x.q),
-    answers: answers,
-    remaining: Math.max(0, Math.min(EXAM_MINUTES * 60, Math.floor(remaining)))
-  };
-}
-
-// Students never receive the answer key. The score is included only when SHOW_SCORE_TO_STUDENT is true.
-function resultPayload_(st, score, message, answers) {
-  const shown = SHOW_SCORE_TO_STUDENT;
-  const ans = Array.isArray(answers) ? answers : [];
-  return {
-    ok: true,
-    submitted: true,
-    no: st.no,
-    name: st.name,
-    score: shown ? score : null,
-    total: shown ? QUESTIONS.length : null,
-    message: shown ? message : 'Your exam has been submitted. Your teacher will release the results.',
-    items: shown ? QUESTIONS.map((q, i) => ({
-      no: i + 1,
-      question: q.q,
-      answer: ans[i] || '',
-      correct: isCorrect_(ans[i], q.a),
-      correctAnswer: q.a[0]
-    })) : null
-  };
-}
-function isCorrect_(ans, accepted) {
-  if (!ans) return false;
-  const n = norm_(ans);
-  return accepted.some(a => norm_(a) === n);
-}
-
-function norm_(s) {
-  return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-}
-
-function normNo_(v) {
-  return String(v == null ? '' : v).trim();
-}
-
-function cleanAnswers_(a) {
-  const arr = Array.isArray(a) ? a : [];
-  return QUESTIONS.map((_, i) => String(arr[i] == null ? '' : arr[i]).slice(0, 500));
-}
-
-function safeParse_(s) {
-  try { return cleanAnswers_(JSON.parse(s || '[]')); }
-  catch (e) { return cleanAnswers_([]); }
-}
-
-function attemptsSheet_() {
-  ensureSetup_();
-  return ss_().getSheetByName(ATTEMPTS_SHEET);
-}
-
-function findStudent_(no) {
-  ensureSetup_();
-  const sh = ss_().getSheetByName(ROSTER_SHEET);
-  const vals = sh.getDataRange().getValues();
-  for (let i = 1; i < vals.length; i++) {
-    if (normNo_(vals[i][0]) === no) {
-      return { no: no, name: String(vals[i][1]).trim(), section: String(vals[i][2] || '').trim() };
-    }
-  }
-  return null;
-}
-
-function findAttemptRow_(sh, no) {
-  const vals = sh.getDataRange().getValues();
-  for (let i = 1; i < vals.length; i++) {
-    if (normNo_(vals[i][0]) === no) return i + 1;
-  }
-  return 0;
-}
-
-// Run this once from the editor (select it in the dropdown, then click Run)
-// to approve the Drive and Sheets permissions.
-function authorizeDrive() {
-  DriveApp.getRootFolder().getName();
-  SpreadsheetApp.openById(SPREADSHEET_ID).getName();
-  Logger.log('Permissions OK');
-}
-
-// ---------- TEACHER PDF REPORT (EDITOR ONLY) ----------
-// Select createExamReport in the dropdown and click Run. It is not reachable from the web app.
-function createExamReport() {
-  const tz = Session.getScriptTimeZone();
-  const data = buildReportData_();
-  const stamp = Utilities.formatDate(new Date(), tz, 'MMMM d, yyyy h:mm a');
-  const fileStamp = Utilities.formatDate(new Date(), tz, 'yyyyMMdd_HHmm');
-  const blob = HtmlService.createHtmlOutput(reportHtml_(data, stamp))
-    .getAs(MimeType.PDF)
-    .setName('CS4_Exam_Report_' + fileStamp + '.pdf');
-
-  const folder = DRIVE_FOLDER_ID
-    ? DriveApp.getFolderById(DRIVE_FOLDER_ID)
-    : DriveApp.getRootFolder();
-  const file = folder.createFile(blob);
-  file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
-  Logger.log('Report saved: ' + file.getUrl());
-}
-
-function buildReportData_() {
-  const sh = attemptsSheet_();
-  const rows = sh.getDataRange().getValues().slice(1).filter(r => normNo_(r[0]) !== '');
-  const done = rows.filter(r => r[4] === 'SUBMITTED');
-  const itemCorrect = QUESTIONS.map(() => 0);
-
-  const students = done.map(r => {
-    const answers = safeParse_(r[5]);
-    let score = 0;
-    QUESTIONS.forEach((q, i) => {
-      if (isCorrect_(answers[i], q.a)) { itemCorrect[i]++; score++; }
-    });
-    return { no: normNo_(r[0]), name: String(r[1]).trim(), section: String(r[2]).trim(), score: score };
-  });
-
-  const scoreFreq = {};
-  students.forEach(s => { scoreFreq[s.score] = (scoreFreq[s.score] || 0) + 1; });
-
-  return {
-    rosterCount: ROSTER.length,
-    attempts: rows.length,
-    inProgress: rows.filter(r => r[4] === 'IN_PROGRESS').length,
-    submitted: done.length,
-    notStarted: Math.max(0, ROSTER.length - rows.length),
-    students: students,
-    itemCorrect: itemCorrect,
-    scoreFreq: scoreFreq
-  };
-}
-
-function reportHtml_(d, stamp) {
-  const e = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const total = QUESTIONS.length;
-  const N = d.submitted;
-  const pct = (x, y) => y ? ((x / y) * 100).toFixed(1) + '%' : '0.0%';
-  const mean = N ? (d.students.reduce((t, s) => t + s.score, 0) / N).toFixed(2) : '0.00';
-
-  // Score frequency distribution (only scores that occur)
-  let scoreRows = '';
-  let cum = 0;
-  for (let s = 0; s <= total; s++) {
-    const f = d.scoreFreq[s] || 0;
-    if (!f) continue;
-    cum += f;
-    scoreRows += `<tr><td>${s} / ${total}</td><td>${f}</td><td>${pct(f, N)}</td><td>${cum}</td><td>${pct(cum, N)}</td></tr>`;
-  }
-  if (!scoreRows) scoreRows = '<tr><td colspan="5">No submitted exams yet.</td></tr>';
-
-  // Item analysis: frequency of correct answers per question
-  let itemRows = '';
-  QUESTIONS.forEach((q, i) => {
-    const c = d.itemCorrect[i];
-    const p = N ? c / N : 0;
-    const diff = p >= 0.7 ? 'Easy' : (p >= 0.3 ? 'Moderate' : 'Difficult');
-    itemRows += `<tr><td>${i + 1}</td><td>${e(q.q)}</td><td>${e(q.a[0])}</td><td>${c}</td><td>${pct(c, N)}</td><td>${diff}</td></tr>`;
-  });
-
-  // Section summary
-  const secs = {};
-  d.students.forEach(s => {
-    const k = s.section || 'No section';
-    (secs[k] = secs[k] || []).push(s.score);
-  });
-  const secRows = Object.keys(secs).sort().map(k => {
-    const arr = secs[k];
-    const m = (arr.reduce((t, x) => t + x, 0) / arr.length).toFixed(2);
-    return `<tr><td>${e(k)}</td><td>${arr.length}</td><td>${m}</td><td>${Math.max(...arr)}</td><td>${Math.min(...arr)}</td></tr>`;
-  }).join('') || '<tr><td colspan="5">No submitted exams yet.</td></tr>';
-
-  // Student results
-  const studentRows = d.students.slice()
-    .sort((a, b) => a.section.localeCompare(b.section) || a.name.localeCompare(b.name))
-    .map(s => `<tr><td>${e(s.section)}</td><td>${e(s.no)}</td><td>${e(s.name)}</td><td>${s.score} / ${total}</td><td>${pct(s.score, total)}</td></tr>`)
-    .join('') || '<tr><td colspan="5">No submitted exams yet.</td></tr>';
-
-  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Exam Result</title>
 <style>
-  body { font-family: Arial, sans-serif; font-size: 10pt; color: #111; }
-  h1 { font-size: 16pt; margin: 0 0 4px; }
-  h2 { font-size: 12pt; margin: 18px 0 6px; border-bottom: 1px solid #999; padding-bottom: 3px; }
-  table { border-collapse: collapse; width: 100%; margin-bottom: 8px; }
-  th, td { border: 1px solid #888; padding: 4px; vertical-align: top; text-align: left; }
+  body { font-family: Arial, sans-serif; color: #111; max-width: 800px; margin: 24px auto; padding: 0 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .meta { color: #555; margin-bottom: 12px; }
+  .score { font-size: 28px; font-weight: bold; color: #2563eb; margin: 12px 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; font-size: 14px; }
   th { background: #e5e7eb; }
-  .sum td { border: none; padding: 2px 10px 2px 0; }
+  .good { color: #166534; font-weight: bold; }
+  .bad { color: #b91c1c; font-weight: bold; }
 </style></head><body>
-<h1>${e(EXAM_TITLE)}</h1>
-<div>Report generated: ${e(stamp)}</div>
-
-<h2>Summary</h2>
-<table class="sum">
-  <tr><td>Students on roster</td><td>${d.rosterCount}</td></tr>
-  <tr><td>Submitted</td><td>${N}</td></tr>
-  <tr><td>In progress</td><td>${d.inProgress}</td></tr>
-  <tr><td>Not yet started</td><td>${d.notStarted}</td></tr>
-  <tr><td>Mean score (submitted)</td><td>${mean} / ${total}</td></tr>
-</table>
-
-<h2>Score Frequency Distribution</h2>
+<h1>${esc(EXAM_TITLE)}</h1>
+<div class="meta">
+  ${esc(r.name)} &middot; ${esc(r.no)}${r.section ? ' &middot; ' + esc(r.section) : ''}<br>
+  Submitted: ${esc(r.submittedAt)}
+</div>
+${scoreLine}
 <table>
-  <tr><th>Score</th><th>Frequency</th><th>Percent</th><th>Cumulative frequency</th><th>Cumulative percent</th></tr>
-  ${scoreRows}
-</table>
-
-<h2>Item Analysis (Frequency of Correct Answers)</h2>
-<table>
-  <tr><th>No.</th><th>Item</th><th>Answer key</th><th>Correct (frequency)</th><th>Percent correct</th><th>Difficulty</th></tr>
-  ${itemRows}
-</table>
-
-<h2>Section Summary</h2>
-<table>
-  <tr><th>Section</th><th>Submitted</th><th>Mean</th><th>Highest</th><th>Lowest</th></tr>
-  ${secRows}
-</table>
-
-<h2>Student Results</h2>
-<table>
-  <tr><th>Section</th><th>Student No</th><th>Name</th><th>Score</th><th>Percent</th></tr>
-  ${studentRows}
+  <tr><th>No.</th><th>Question</th><th>Your answer</th>${r.showScore ? '<th>Result</th>' : ''}</tr>
+  ${rows}
 </table>
 </body></html>`;
 }
+// Start: the page loads with an empty login form.
+renderLogin('');
+</script>
+</body>
+</html>
