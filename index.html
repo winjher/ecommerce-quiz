@@ -5,36 +5,112 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CS 4 Exam</title>
 <style>
-  body { font-family: system-ui, Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 16px; color: #222; }
-  .card { max-width: 760px; margin: 0 auto; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-  h1 { font-size: 20px; margin: 0 0 10px; }
-  input[type=text] { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #bbb; border-radius: 6px; box-sizing: border-box; }
-  button { background: #2563eb; color: #fff; border: 0; border-radius: 6px; padding: 10px 18px; font-size: 16px; cursor: pointer; }
+  :root {
+    --brand: #1e3a8a;
+    --accent: #f97316;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --good: #15803d;
+    --bad: #b91c1c;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background: var(--bg); margin: 0; color: var(--text); }
+
+  /* Top navigation bar */
+  .topbar { background: var(--brand); color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .brand { font-weight: 800; font-size: 18px; letter-spacing: .3px; }
+  .brand span { color: var(--accent); }
+  .topbar .tag { background: rgba(255,255,255,.15); padding: 6px 12px; border-radius: 999px; font-size: 13px; }
+
+  /* Course banner */
+  .banner { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #f97316 140%); color: #fff; padding: 26px 20px; }
+  .banner-inner { max-width: 900px; margin: 0 auto; }
+  .banner .course { font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; opacity: .9; margin: 0 0 6px; }
+  .banner h2 { margin: 0 0 12px; font-size: 24px; line-height: 1.25; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .meta-chip { background: rgba(255,255,255,.18); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+  .meta-chip b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; opacity: .85; font-weight: 600; }
+
+  /* Main content */
+  .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); margin-bottom: 16px; }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  p { line-height: 1.5; }
+
+  input[type=text] { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; }
+  input[type=text]:focus { outline: 2px solid var(--brand); border-color: transparent; }
+
+  button { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 12px 22px; font-size: 16px; font-weight: 600; cursor: pointer; }
+  button:hover { filter: brightness(.95); }
   button:disabled { background: #9ca3af; cursor: default; }
-  .q { margin: 14px 0; }
-  .q label { font-weight: 600; display: block; margin-bottom: 6px; }
-  #timer { position: sticky; top: 0; background: #111; color: #fff; padding: 10px; border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 12px; z-index: 1; }
-  .msg { color: #b91c1c; margin-top: 10px; }
-  .score { font-size: 44px; font-weight: bold; text-align: center; color: #2563eb; margin: 20px 0 6px; }
+
+  /* Sticky timer */
+  #timer { position: sticky; top: 0; z-index: 5; background: #111827; color: #fff; padding: 12px; border-radius: 10px; text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+
+  /* Question items */
+  .q { background: var(--card); border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .q-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+  .num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .q label { font-weight: 600; line-height: 1.4; }
+
+  .msg { color: var(--bad); margin-top: 10px; }
+  .ok { color: var(--good); margin-top: 10px; }
   .center { text-align: center; }
-  .ok { color: #166534; margin-top: 10px; }
-  .qa { border-top: 1px solid #e5e7eb; padding: 10px 0; text-align: left; }
-  .qa .good { color: #166534; font-weight: bold; }
-  .qa .bad { color: #b91c1c; font-weight: bold; }
+
+  /* Result screen */
+  .score { font-size: 44px; font-weight: 800; text-align: center; color: var(--brand); margin: 18px 0 6px; }
+  .qa { border-top: 1px solid #e5e7eb; padding: 12px 0; }
+  .qa .good { color: var(--good); font-weight: 700; }
+  .qa .bad { color: var(--bad); font-weight: 700; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 16px 30px; }
+
+  @media (max-width: 480px) {
+    .banner h2 { font-size: 20px; }
+    .score { font-size: 36px; }
+  }
 </style>
 </head>
 <body>
-<div class="card" id="app"></div>
+
+<div class="topbar">
+  <div class="brand">CS <span>4</span> Exam Portal</div>
+  <div class="tag">Elective 3 &middot; E-Commerce</div>
+</div>
+
+<div class="banner">
+  <div class="banner-inner">
+    <p class="course">Elective 3 &middot; E-Commerce</p>
+    <h2>CS 4 Exam: Security Governance &amp; Legal Issues</h2>
+    <div class="meta-row">
+      <div class="meta-chip"><b>Professor</b>Dr. Jerwin Montellano</div>
+      <div class="meta-chip"><b>Subject</b>Elective 3: E-Commerce</div>
+      <div class="meta-chip"><b>Duration</b>60 minutes</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="card" id="app"></div>
+</div>
+
+<footer>Dr. Jerwin Montellano &middot; Elective 3: E-Commerce</footer>
 
 <script>
-// The server fills in its own web app URL, so the page always calls
-// the deployment it was opened from.
-const API_URL = 'https://script.google.com/macros/s/AKfycbzOwOrO2rBkM4XFjyvuyQbCshQCM2mqo_GxHUXV9Rgh0BeA0VPk9O-NCRA6UOPbSh96/exec';
+// The server fills in the URL of the deployment this page was opened from.
+const API_URL = '<?!= endpoint ?>';
 
 const EXAM_TITLE = 'CS 4 Exam: Security Governance & Legal Issues';
 const EXAM_MINUTES = 60;
 
-const state = { no: '', name: '', questions: [], endAt: 0, timer: null, saveTimer: null, done: false, submitting: false };
+const state = {
+  no: '', name: '', questions: [], endAt: 0,
+  timer: null, saveTimer: null,
+  done: false, submitting: false,
+  lastResult: null
+};
 
 function $(id) { return document.getElementById(id); }
 function show(html) { $('app').innerHTML = html; }
@@ -43,8 +119,8 @@ function esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-// Calls the server with JSONP: the response loads through a <script> tag, which
-// avoids the CORS limits that block fetch() responses from Apps Script.
+// Calls the server with JSONP: the response loads through a <script> tag,
+// which avoids the CORS limits that block fetch() responses from Apps Script.
 function api(action, data) {
   return new Promise((resolve, reject) => {
     const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
@@ -75,10 +151,10 @@ function api(action, data) {
 // ---------- LOGIN ----------
 function renderLogin(msg) {
   show(`
-    <h1>${esc(EXAM_TITLE)}</h1>
+    <h1>Student Login</h1>
     <p>Enter your student number. The exam is ${EXAM_MINUTES} minutes and the timer starts when you log in.</p>
     <input type="text" id="sno" inputmode="numeric" placeholder="Student number" autocomplete="off">
-    <div style="margin-top:12px"><button id="go">Start / Resume</button></div>
+    <div style="margin-top:14px"><button id="go">Start / Resume Exam</button></div>
     <div class="msg" id="msg"></div>
   `);
   $('msg').textContent = msg || '';
@@ -119,14 +195,17 @@ function renderExam(saved) {
   state.questions.forEach((q, i) => {
     html += `
       <div class="q">
-        <label for="a${i}">${i + 1}. ${esc(q)}</label>
+        <div class="q-head">
+          <div class="num">${i + 1}</div>
+          <label for="a${i}">${esc(q)}</label>
+        </div>
         <input type="text" id="a${i}" maxlength="150" autocomplete="off">
       </div>`;
   });
 
   html += `
-    <button id="submit">Submit Exam</button>
-    <div class="msg" id="msg"></div>`;
+    <div class="center" style="margin-top:16px"><button id="submit">Submit Exam</button></div>
+    <div class="msg center" id="msg"></div>`;
 
   show(html);
   state.questions.forEach((_, i) => { $('a' + i).value = saved[i] || ''; });
@@ -182,15 +261,19 @@ async function submitExam(auto) {
   }
 }
 
-// r.score is null when the teacher has hidden scores, so only the message is shown.
+// ---------- RESULT ----------
+// r.score and r.items are null when the teacher has hidden scores, so only the message is shown.
 function renderResult(r) {
   window.onbeforeunload = null;
   clearInterval(state.timer);
   clearInterval(state.saveTimer);
+  state.lastResult = r;
+
   const hasScore = r.score !== null && r.score !== undefined;
+  const hasItems = Array.isArray(r.items);
   const pct = hasScore && r.total ? Math.round((r.score / r.total) * 100) : 0;
 
-  const itemsHtml = Array.isArray(r.items)
+  const itemsHtml = hasItems
     ? r.items.map(it => `
         <div class="qa">
           <div><b>${it.no}. ${esc(it.question)}</b></div>
@@ -206,44 +289,38 @@ function renderResult(r) {
     ${hasScore ? `<div class="score">${esc(r.score)} / ${esc(r.total)}</div><p class="center">${pct}%</p>` : ''}
     ${r.message ? `<p class="center">${esc(r.message)}</p>` : ''}
     ${itemsHtml}
-    <div class="center" style="margin-top:18px"><button id="dl">Download my results</button></div>
-    <div class="center" id="dlmsg"></div>
+    ${hasItems ? `<div class="center" style="margin-top:18px"><button id="dl">Download My Results</button></div>
+    <div class="center" id="dlmsg"></div>` : ''}
     <p class="center">You may close this page now.</p>
   `);
-  $('dl').onclick = () => downloadResult(r.no);
+
+  if (hasItems) $('dl').onclick = downloadResult;
 }
-// Asks the server for this student's own answers, then saves them as an HTML file.
-async function downloadResult(no) {
-  const btn = $('dl');
+
+// Builds the result file in the browser from the answers already on this page.
+function downloadResult() {
   const msg = $('dlmsg');
-  btn.disabled = true;
-  msg.className = 'ok';
-  msg.textContent = 'Preparing your result...';
-
-  try {
-    const r = await api('result', { studentNo: no });
-    if (!r.ok) throw new Error(r.message || 'Could not get your result.');
-
-    const blob = new Blob([buildResultHtml(r)], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Exam_Result_' + r.no + '.html';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-
-    msg.className = 'ok';
-    msg.textContent = 'Your result was downloaded. Open the file and choose Print > Save as PDF if you need a PDF.';
-  } catch (e) {
+  const r = state.lastResult;
+  if (!r || !Array.isArray(r.items)) {
     msg.className = 'msg';
-    msg.textContent = 'Could not download: ' + e.message;
+    msg.textContent = 'Could not download: results are not available yet.';
+    return;
   }
-  btn.disabled = false;
+
+  const blob = new Blob([buildResultHtml(r)], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Exam_Result_' + r.no + '.html';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+  msg.className = 'ok';
+  msg.textContent = 'Your result was downloaded. Open the file and choose Print > Save as PDF if you need a PDF.';
 }
 
-// Builds the result file: the student's answers, plus marks only if scores are released.
 function buildResultHtml(r) {
   const rows = r.items.map(it => {
     const mark = it.correct === null
@@ -261,15 +338,16 @@ function buildResultHtml(r) {
   body { font-family: Arial, sans-serif; color: #111; max-width: 800px; margin: 24px auto; padding: 0 16px; }
   h1 { font-size: 20px; margin: 0 0 4px; }
   .meta { color: #555; margin-bottom: 12px; }
-  .score { font-size: 28px; font-weight: bold; color: #2563eb; margin: 12px 0; }
+  .score { font-size: 28px; font-weight: bold; color: #1e3a8a; margin: 12px 0; }
   table { border-collapse: collapse; width: 100%; }
   th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; font-size: 14px; }
   th { background: #e5e7eb; }
-  .good { color: #166534; font-weight: bold; }
+  .good { color: #15803d; font-weight: bold; }
   .bad { color: #b91c1c; font-weight: bold; }
 </style></head><body>
 <h1>${esc(EXAM_TITLE)}</h1>
 <div class="meta">
+  Professor: Dr. Jerwin Montellano &middot; Elective 3: E-Commerce<br>
   ${esc(r.name)} &middot; ${esc(r.no)}${r.section ? ' &middot; ' + esc(r.section) : ''}<br>
   Submitted: ${esc(r.submittedAt)}
 </div>
@@ -280,6 +358,7 @@ ${scoreLine}
 </table>
 </body></html>`;
 }
+
 // Start: the page loads with an empty login form.
 renderLogin('');
 </script>
