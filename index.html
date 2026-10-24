@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CS 4 Exam</title>
 <style>
   :root {
@@ -18,13 +18,11 @@
   * { box-sizing: border-box; }
   body { font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background: var(--bg); margin: 0; color: var(--text); }
 
-  /* Top navigation bar */
   .topbar { background: var(--brand); color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .brand { font-weight: 800; font-size: 18px; letter-spacing: .3px; }
   .brand span { color: var(--accent); }
   .topbar .tag { background: rgba(255,255,255,.15); padding: 6px 12px; border-radius: 999px; font-size: 13px; }
 
-  /* Course banner */
   .banner { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #f97316 140%); color: #fff; padding: 26px 20px; }
   .banner-inner { max-width: 900px; margin: 0 auto; }
   .banner .course { font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; opacity: .9; margin: 0 0 6px; }
@@ -33,7 +31,6 @@
   .meta-chip { background: rgba(255,255,255,.18); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
   .meta-chip b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; opacity: .85; font-weight: 600; }
 
-  /* Main content */
   .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
   .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); margin-bottom: 16px; }
   h1 { font-size: 20px; margin: 0 0 8px; }
@@ -46,10 +43,8 @@
   button:hover { filter: brightness(.95); }
   button:disabled { background: #9ca3af; cursor: default; }
 
-  /* Sticky timer */
   #timer { position: sticky; top: 0; z-index: 5; background: #111827; color: #fff; padding: 12px; border-radius: 10px; text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
 
-  /* Question items */
   .q { background: var(--card); border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
   .q-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
   .num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
@@ -59,7 +54,6 @@
   .ok { color: var(--good); margin-top: 10px; }
   .center { text-align: center; }
 
-  /* Result screen */
   .score { font-size: 44px; font-weight: 800; text-align: center; color: var(--brand); margin: 18px 0 6px; }
   .qa { border-top: 1px solid #e5e7eb; padding: 12px 0; }
   .qa .good { color: var(--good); font-weight: 700; }
@@ -99,8 +93,8 @@
 <footer>Dr. Jerwin Montellano &middot; Elective 3: E-Commerce</footer>
 
 <script>
-// The server fills in the URL of the deployment this page was opened from.
-const API_URL = 'https://script.google.com/macros/s/AKfycbxjQtcrs0RNQSMPtuXRTHxIvuZNeS10PG34Rt9EROtoO5Tvz799SQV_oNiSe0WdVAL7/exec';
+// The server fills in the URL of the web app this page was opened from.
+const API_URL = 'https://script.google.com/macros/s/AKfycbyz0tV71DJZqVQELt1T1azWjWlIGskDU3d74FS1xKDoViM-sdF-K-MYkOM9MaCeCZvz/exec';
 
 const EXAM_TITLE = 'CS 4 Exam: Security Governance & Legal Issues';
 const EXAM_MINUTES = 60;
@@ -119,9 +113,9 @@ function esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-// Calls the server with JSONP: the response loads through a <script> tag,
-// which avoids the CORS limits that block fetch() responses from Apps Script.
-function api(action, data) {
+// All server calls use JSONP (a script tag). This is the same method that already works for login.
+// Objects and arrays are sent as JSON text in the query string.
+function apiGet(action, data) {
   return new Promise((resolve, reject) => {
     const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
     const params = new URLSearchParams();
@@ -168,7 +162,7 @@ async function doLogin() {
   $('go').disabled = true;
   $('msg').textContent = 'Checking...';
   try {
-    onLogin(await api('login', { studentNo: no }));
+    onLogin(await apiGet('login', { studentNo: no }));
   } catch (e) {
     $('go').disabled = false;
     $('msg').textContent = 'Error: ' + e.message + '. Please try again.';
@@ -176,13 +170,13 @@ async function doLogin() {
 }
 
 function onLogin(r) {
-  if (!r.ok) { renderLogin(r.message); return; }
-  if (r.submitted) { renderResult(r); return; }
+  if (!r || !r.ok) { renderLogin(r && r.message); return; }
   state.no = r.no;
   state.name = r.name;
+  if (r.submitted) { state.done = true; renderResult(r); return; }
   state.questions = r.questions;
   state.endAt = Date.now() + r.remaining * 1000;
-  renderExam(r.answers);
+  renderExam(r.answers || []);
 }
 
 // ---------- EXAM ----------
@@ -190,14 +184,14 @@ function renderExam(saved) {
   let html = `
     <div id="timer">Time left: <span id="clock">--:--</span></div>
     <h1>${esc(state.name)} &middot; ${esc(state.no)}</h1>
-    <p>Type your answer for each item. Answers are saved automatically.</p>`;
+    <p>Type your answer for each item. Answers are saved automatically every 30 seconds.</p>`;
 
-  state.questions.forEach((q, i) => {
+  state.questions.forEach((item, i) => {
     html += `
       <div class="q">
         <div class="q-head">
           <div class="num">${i + 1}</div>
-          <label for="a${i}">${esc(q)}</label>
+          <label for="a${i}">${esc(item.q)}</label>
         </div>
         <input type="text" id="a${i}" maxlength="150" autocomplete="off">
       </div>`;
@@ -230,16 +224,16 @@ function tick() {
   const s = String(left % 60).padStart(2, '0');
   const el = $('clock');
   if (el) el.textContent = `${m}:${s}`;
-  if (left <= 0 && !state.submitting) submitExam(true);
+  if (left <= 0 && !state.submitting && !state.done) submitExam(true);
 }
 
 function autosave() {
   if (state.done || state.submitting) return;
-  api('save', { studentNo: state.no, answers: getAnswers() }).catch(() => {});
+  apiGet('save', { studentNo: state.no, answers: getAnswers() }).catch(() => {});
 }
 
 async function submitExam(auto) {
-  if (state.submitting) return;
+  if (state.submitting || state.done) return;
   state.submitting = true;
   clearInterval(state.timer);
   clearInterval(state.saveTimer);
@@ -248,28 +242,38 @@ async function submitExam(auto) {
   if ($('msg')) $('msg').textContent = auto ? 'Time is up. Submitting your answers...' : 'Submitting...';
 
   try {
-    const r = await api('submit', { studentNo: state.no, answers: getAnswers() });
-    if (!r.ok) throw new Error(r.message || 'Submission was not accepted.');
+    const r = await apiGet('submit', {
+      studentNo: state.no,
+      answers: getAnswers(),
+      auto: auto ? 'true' : 'false'
+    });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Submission was not accepted.');
     state.done = true;
     renderResult(r);
   } catch (e) {
     state.submitting = false;
-    if ($('msg')) $('msg').textContent = 'Submission failed: ' + e.message + '. Your answers are saved. Please try again.';
-    if (b) b.disabled = false;
-    state.timer = setInterval(tick, 1000);
-    state.saveTimer = setInterval(autosave, 30000);
+    if ($('msg')) $('msg').textContent = 'Submission failed: ' + e.message + '. Your answers are saved. Please press Submit again.';
+    if (b) {
+      b.disabled = false;
+      b.onclick = () => {
+        if (confirm('Submit your exam now? You cannot change your answers after submitting.')) submitExam(false);
+      };
+    }
+    if (!auto) {
+      state.timer = setInterval(tick, 1000);
+      state.saveTimer = setInterval(autosave, 30000);
+    }
   }
 }
 
 // ---------- RESULT ----------
-// r.score and r.items are null when the teacher has hidden scores, so only the message is shown.
 function renderResult(r) {
   window.onbeforeunload = null;
   clearInterval(state.timer);
   clearInterval(state.saveTimer);
   state.lastResult = r;
 
-  const hasScore = r.score !== null && r.score !== undefined;
+  const hasScore = r.showScore && r.score !== null && r.score !== undefined;
   const hasItems = Array.isArray(r.items);
   const pct = hasScore && r.total ? Math.round((r.score / r.total) * 100) : 0;
 
@@ -278,8 +282,8 @@ function renderResult(r) {
         <div class="qa">
           <div><b>${it.no}. ${esc(it.question)}</b></div>
           <div>Your answer: ${esc(it.answer || '(no answer)')}
-            <span class="${it.correct ? 'good' : 'bad'}">${it.correct ? 'Correct' : 'Incorrect'}</span></div>
-          ${it.correct ? '' : `<div class="ok">Correct answer: ${esc(it.correctAnswer)}</div>`}
+            ${it.correct === null ? '' : `<span class="${it.correct ? 'good' : 'bad'}">${it.correct ? 'Correct' : 'Incorrect'}</span>`}</div>
+          ${it.correct === false ? `<div class="ok">Correct answer: ${esc(it.correctAnswer)}</div>` : ''}
         </div>`).join('')
     : '';
 
@@ -289,74 +293,46 @@ function renderResult(r) {
     ${hasScore ? `<div class="score">${esc(r.score)} / ${esc(r.total)}</div><p class="center">${pct}%</p>` : ''}
     ${r.message ? `<p class="center">${esc(r.message)}</p>` : ''}
     ${itemsHtml}
-    ${hasItems ? `<div class="center" style="margin-top:18px"><button id="dl">Download My Results</button></div>
+    ${hasItems ? `<div class="center" style="margin-top:18px"><button id="dl">Download My Result (PDF)</button></div>
     <div class="center" id="dlmsg"></div>` : ''}
     <p class="center">You may close this page now.</p>
   `);
 
-  if (hasItems) $('dl').onclick = downloadResult;
+  if (hasItems) $('dl').onclick = downloadPdf;
 }
 
-// Builds the result file in the browser from the answers already on this page.
-function downloadResult() {
+// Asks the server for the student's own PDF, then saves it on the device.
+async function downloadPdf() {
   const msg = $('dlmsg');
-  const r = state.lastResult;
-  if (!r || !Array.isArray(r.items)) {
-    msg.className = 'msg';
-    msg.textContent = 'Could not download: results are not available yet.';
-    return;
-  }
-
-  const blob = new Blob([buildResultHtml(r)], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'Exam_Result_' + r.no + '.html';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-
+  const btn = $('dl');
+  const no = (state.lastResult && state.lastResult.no) || state.no;
+  btn.disabled = true;
   msg.className = 'ok';
-  msg.textContent = 'Your result was downloaded. Open the file and choose Print > Save as PDF if you need a PDF.';
-}
+  msg.textContent = 'Preparing your PDF...';
+  try {
+    const r = await apiGet('pdf', { studentNo: no });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not create the PDF.');
 
-function buildResultHtml(r) {
-  const rows = r.items.map(it => {
-    const mark = it.correct === null
-      ? ''
-      : (it.correct ? '<td class="good">Correct</td>' : '<td class="bad">Incorrect</td>');
-    return `<tr><td>${it.no}</td><td>${esc(it.question)}</td><td>${esc(it.answer || '(no answer)')}</td>${mark}</tr>`;
-  }).join('');
+    const bin = atob(r.base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
 
-  const scoreLine = r.showScore
-    ? `<p class="score">${esc(r.score)} / ${esc(r.total)}</p>`
-    : '';
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = r.filename || ('Exam_Result_' + no + '.pdf');
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
 
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Exam Result</title>
-<style>
-  body { font-family: Arial, sans-serif; color: #111; max-width: 800px; margin: 24px auto; padding: 0 16px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  .meta { color: #555; margin-bottom: 12px; }
-  .score { font-size: 28px; font-weight: bold; color: #1e3a8a; margin: 12px 0; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; font-size: 14px; }
-  th { background: #e5e7eb; }
-  .good { color: #15803d; font-weight: bold; }
-  .bad { color: #b91c1c; font-weight: bold; }
-</style></head><body>
-<h1>${esc(EXAM_TITLE)}</h1>
-<div class="meta">
-  Professor: Dr. Jerwin Montellano &middot; Elective 3: E-Commerce<br>
-  ${esc(r.name)} &middot; ${esc(r.no)}${r.section ? ' &middot; ' + esc(r.section) : ''}<br>
-  Submitted: ${esc(r.submittedAt)}
-</div>
-${scoreLine}
-<table>
-  <tr><th>No.</th><th>Question</th><th>Your answer</th>${r.showScore ? '<th>Result</th>' : ''}</tr>
-  ${rows}
-</table>
-</body></html>`;
+    msg.textContent = 'Your PDF was downloaded.';
+  } catch (e) {
+    msg.className = 'msg';
+    msg.textContent = 'Could not create the PDF: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // Start: the page loads with an empty login form.
