@@ -78,7 +78,7 @@
 
 <script>
 // The server fills in the URL of the web app this page was opened from.
-const API_URL = 'https://script.google.com/macros/s/AKfycbzYHZthKX01IdpoZPdJ2yqgGr-U0Waf0sCy_XH2LdFvbohvejoke1wSDamDvJLpxuYA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxoR80HKKTuM45yYMCTXuEOltEeCh6abjIMvRWiMqHKuRURM7i9Obv21fSMtIY4_os/exec';
 const EXAM_MINUTES = 60;
 
 const state = {
@@ -156,21 +156,21 @@ async function doLogin(resultOnly) {
     $('msg').textContent = 'Error: ' + e.message + '. Please try again.';
   }
 }
-
 function onLogin(r) {
   if (!r || !r.ok) { renderLogin(r && r.message); return; }
   state.no = r.no;
   state.name = r.name;
   if (r.submitted === true && Array.isArray(r.items)) { renderResult(r); return; }
   state.questions = r.questions;
-  state.endAt = Date.now() + r.remaining * 1000;
+  const secs = Number(r.remaining);
+  state.liveStarted = secs > 0;
+  state.endAt = Date.now() + (secs > 0 ? secs * 1000 : 0);
   renderExam(r.answers || {});
 }
-
 // ---------- EXAM ----------
 function renderExam(saved) {
   let html = `
-    <div id="timer">Time left: <span id="clock">--:--</span></div>
+    <div id="timer">Time left: <span id="clock">${EXAM_MINUTES}:00</span></div>
     <h1>${esc(state.name)} &middot; ${esc(state.no)}</h1>
     <p>Answers are saved automatically. <span id="saved" class="saved"></span></p>`;
 
@@ -199,11 +199,14 @@ function renderExam(saved) {
     if (confirm('Submit your exam now? You cannot change your answers after submitting.')) submitExam(false);
   };
   window.onbeforeunload = () => state.done ? null : 'Your exam is still in progress.';
-  tick();
-  state.timer = setInterval(tick, 1000);
+
+  // Start the countdown only after the time is known, and do not show 0:00 before it is.
+  if (state.liveStarted) {
+    tick();
+    state.timer = setInterval(tick, 1000);
+  }
   state.saveTimer = setInterval(autosave, 30000);
 }
-
 // Answers are keyed by question id, which is how the server stores them.
 function getAnswers() {
   const o = {};
@@ -212,6 +215,7 @@ function getAnswers() {
 }
 
 function tick() {
+  if (!state.liveStarted) return;
   const left = Math.max(0, Math.round((state.endAt - Date.now()) / 1000));
   const el = $('clock');
   if (el) el.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
@@ -220,7 +224,6 @@ function tick() {
     submitExam(true);
   }
 }
-
 function autosave() {
   if (state.done || state.submitting || !state.no) return;
   apiGet('save', { studentNo: state.no, answers: getAnswers() })
@@ -262,7 +265,6 @@ function renderResult(r) {
     show('<h1>Exam Result</h1><p class="center">Your result is not available until you submit the exam.</p>');
     return;
   }
-  // Keep the student details so the PDF button works after any way of opening the result.
   state.no = r.no;
   state.name = r.name;
 
@@ -271,37 +273,50 @@ function renderResult(r) {
   clearInterval(state.saveTimer);
   state.done = true;
 
-  const shown = !!r.showScore && typeof r.score === 'number' && !!r.total;
-  const correct = shown ? r.score : 0;
-  const total = shown ? r.total : 0;
+  const items = r.items;
+  const total = items.length;
+  const shown = !!r.showScore;
+
+  // Score computed on the page: count the items the server marked correct.
+  const correct = items.filter(it => it.correct === true).length;
+  const answered = items.filter(it => String(it.answer || '').trim() !== '').length;
+  const wrong = total - correct;
   const pct = total ? ((correct / total) * 100).toFixed(1) : '0.0';
 
   const summary = shown ? `
     <div class="summary">
       <div class="stat"><b>${correct} / ${total}</b><span>Score</span></div>
       <div class="stat"><b>${pct}%</b><span>Percentage</span></div>
-      <div class="stat"><b>${correct}</b><span>Correct</span></div>
-      <div class="stat"><b>${total - correct}</b><span>Incorrect</span></div>
+      <div class="stat"><b>${answered}</b><span>Answered</span></div>
+      <div class="stat"><b>${wrong}</b><span>Incorrect</span></div>
     </div>` : '';
 
-  const warning = r.answered === 0
-    ? '<p class="warn">No answers were recorded for this exam. Please tell your teacher.</p>' : '';
+  const warning = answered === 0
+    ? '<p class="warn">No answers were recorded for this exam. Please tell your teacher.</p>'
+    : (answered < total
+      ? `<p class="warn">${total - answered} question(s) have no answer recorded.</p>`
+      : '');
 
-  const rows = r.items.map(it => {
-    const mark = shown
-      ? `<td class="${it.correct ? 'good' : 'bad'}">${it.correct ? 'Correct' : 'Incorrect'}</td>` : '';
-    const key = shown ? `<td>${esc(it.correctAnswer)}</td>` : '';
-    return `<tr><td>${it.no}</td><td>${esc(it.question)}</td><td>${esc(it.answer || '(no answer)')}</td>${key}${mark}</tr>`;
+  const rows = items.map(it => {
+    const given = String(it.answer || '').trim();
+    const answerCell = given
+      ? esc(given)
+      : '<span class="bad">(no answer)</span>';
+    const keyCell = shown ? `<td>${esc(it.correctAnswer)}</td>` : '';
+    const markCell = shown
+      ? `<td class="${it.correct ? 'good' : 'bad'}">${it.correct ? 'Correct' : 'Incorrect'}</td>`
+      : '';
+    return `<tr><td>${it.no}</td><td>${esc(it.question)}</td><td>${answerCell}</td>${keyCell}${markCell}</tr>`;
   }).join('');
 
   show(`
     <h1>Exam Result</h1>
     <p class="center">${esc(r.name)} &middot; ${esc(r.no)}${r.submittedAt ? ' &middot; Submitted ' + esc(r.submittedAt) : ''}</p>
     ${summary}
-    ${r.message ? `<p class="center">${esc(r.message)}</p>` : ''}
     ${warning}
+    ${r.message ? `<p class="center">${esc(r.message)}</p>` : ''}
     <table class="ans-table">
-      <tr><th>No.</th><th>Question</th><th>Your answer</th>${shown ? '<th>Correct answer</th><th>Result</th>' : ''}</tr>
+      <tr><th>No.</th><th>Question</th><th>Student's answer</th>${shown ? '<th>Correct answer</th><th>Result</th>' : ''}</tr>
       ${rows}
     </table>
     <div class="center" style="margin-top:18px"><button id="dl">Download My Result (PDF)</button></div>
