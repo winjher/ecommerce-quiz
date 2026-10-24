@@ -214,8 +214,11 @@ function renderExam(saved) {
   state.saveTimer = setInterval(autosave, 30000);
 }
 
+// Sends answers keyed by question id, so the server never has to guess the order.
 function getAnswers() {
-  return state.questions.map((_, i) => $('a' + i).value);
+  const o = {};
+  state.questions.forEach((item, i) => { o[item.id] = $('a' + i).value; });
+  return o;
 }
 
 function tick() {
