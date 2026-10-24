@@ -215,15 +215,21 @@ function getAnswers() {
 }
 
 function tick() {
-  if (!state.liveStarted) return;
   const left = Math.max(0, Math.round((state.endAt - Date.now()) / 1000));
   const el = $('clock');
-  if (el) el.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
-  if (left <= 0 && !state.autoTried && !state.submitting && !state.done) {
+  if (el) {
+    if (state.expiredAtLogin && left <= 0) {
+      el.textContent = 'Time has ended. Ask your teacher to restart your clock.';
+    } else {
+      el.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+    }
+  }
+  if (state.liveStarted && left <= 0 && !state.autoTried && !state.submitting && !state.done) {
     state.autoTried = true;
     submitExam(true);
   }
 }
+
 function autosave() {
   if (state.done || state.submitting || !state.no) return;
   apiGet('save', { studentNo: state.no, answers: getAnswers() })
