@@ -6,65 +6,50 @@
 <title>CS 4 Exam</title>
 <style>
   :root {
-    --brand: #1e3a8a;
-    --accent: #f97316;
-    --bg: #f3f4f6;
-    --card: #ffffff;
-    --text: #1f2937;
-    --muted: #6b7280;
-    --good: #15803d;
-    --bad: #b91c1c;
+    --brand: #1e3a8a; --accent: #f97316; --bg: #f3f4f6; --card: #ffffff;
+    --text: #1f2937; --muted: #6b7280; --good: #15803d; --bad: #b91c1c;
   }
   * { box-sizing: border-box; }
   body { font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background: var(--bg); margin: 0; color: var(--text); }
-
-  .topbar { background: var(--brand); color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .brand { font-weight: 800; font-size: 18px; letter-spacing: .3px; }
+  .topbar { background: var(--brand); color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .brand { font-weight: 800; font-size: 18px; }
   .brand span { color: var(--accent); }
   .topbar .tag { background: rgba(255,255,255,.15); padding: 6px 12px; border-radius: 999px; font-size: 13px; }
-
   .banner { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #f97316 140%); color: #fff; padding: 26px 20px; }
   .banner-inner { max-width: 900px; margin: 0 auto; }
-  .banner .course { font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; opacity: .9; margin: 0 0 6px; }
   .banner h2 { margin: 0 0 12px; font-size: 24px; line-height: 1.25; }
   .meta-row { display: flex; flex-wrap: wrap; gap: 10px; }
   .meta-chip { background: rgba(255,255,255,.18); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
-  .meta-chip b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; opacity: .85; font-weight: 600; }
-
+  .meta-chip b { display: block; font-size: 11px; text-transform: uppercase; opacity: .85; }
   .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
   .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); margin-bottom: 16px; }
   h1 { font-size: 20px; margin: 0 0 8px; }
-  p { line-height: 1.5; }
-
-  input[type=text] { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; }
+  input[type=text] { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 8px; }
   input[type=text]:focus { outline: 2px solid var(--brand); border-color: transparent; }
-
   button { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 12px 22px; font-size: 16px; font-weight: 600; cursor: pointer; }
-  button:hover { filter: brightness(.95); }
   button:disabled { background: #9ca3af; cursor: default; }
-
-  #timer { position: sticky; top: 0; z-index: 5; background: #111827; color: #fff; padding: 12px; border-radius: 10px; text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
-
+  button.secondary { background: var(--brand); }
+  #timer { position: sticky; top: 0; z-index: 5; background: #111827; color: #fff; padding: 12px; border-radius: 10px; text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+  .saved { font-size: 12px; color: var(--muted); }
   .q { background: var(--card); border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
   .q-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
   .num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
   .q label { font-weight: 600; line-height: 1.4; }
-
   .msg { color: var(--bad); margin-top: 10px; }
   .ok { color: var(--good); margin-top: 10px; }
+  .warn { color: var(--bad); font-weight: 600; text-align: center; }
   .center { text-align: center; }
-
-  .score { font-size: 44px; font-weight: 800; text-align: center; color: var(--brand); margin: 18px 0 6px; }
-  .qa { border-top: 1px solid #e5e7eb; padding: 12px 0; }
-  .qa .good { color: var(--good); font-weight: 700; }
-  .qa .bad { color: var(--bad); font-weight: 700; }
-
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+  .stat { background: #eff6ff; border-radius: 10px; padding: 12px 8px; text-align: center; }
+  .stat b { display: block; font-size: 22px; color: var(--brand); }
+  .stat span { font-size: 12px; color: var(--muted); text-transform: uppercase; }
+  .ans-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+  .ans-table th, .ans-table td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; vertical-align: top; }
+  .ans-table th { background: #f3f4f6; }
+  .good { color: var(--good); font-weight: 700; }
+  .bad { color: var(--bad); font-weight: 700; }
   footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 16px 30px; }
-
-  @media (max-width: 480px) {
-    .banner h2 { font-size: 20px; }
-    .score { font-size: 36px; }
-  }
+  @media (max-width: 480px) { .banner h2 { font-size: 20px; } .summary { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>
@@ -76,7 +61,6 @@
 
 <div class="banner">
   <div class="banner-inner">
-    <p class="course">Elective 3 &middot; E-Commerce</p>
     <h2>CS 4 Exam: Security Governance &amp; Legal Issues</h2>
     <div class="meta-row">
       <div class="meta-chip"><b>Professor</b>Dr. Jerwin Montellano</div>
@@ -90,20 +74,17 @@
   <div class="card" id="app"></div>
 </div>
 
-<footer>Dr. Jerwin Montellano &middot; Elective 3: E-Commerce</footer>
+<footer>Dr. Jerwin Montellano &middot; Elective 3: E-Commerce<br><span id="ver"></span></footer>
 
 <script>
 // The server fills in the URL of the web app this page was opened from.
-const API_URL = 'https://script.google.com/macros/s/AKfycbxonm0D4ED687EQsqFo5xIbdSQ8EkbYmZkMU1uGZJHC4otWZ1Ytr-hqqZ8kBRoXoAGzXA/exec';
-
-const EXAM_TITLE = 'CS 4 Exam: Security Governance & Legal Issues';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzYHZthKX01IdpoZPdJ2yqgGr-U0Waf0sCy_XH2LdFvbohvejoke1wSDamDvJLpxuYA/exec';
 const EXAM_MINUTES = 60;
 
 const state = {
   no: '', name: '', questions: [], endAt: 0,
   timer: null, saveTimer: null,
-  done: false, submitting: false,
-  lastResult: null
+  done: false, submitting: false, autoTried: false
 };
 
 function $(id) { return document.getElementById(id); }
@@ -113,24 +94,20 @@ function esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-// GET with JSONP. Used for login only (short request, no answers in the URL).
+// Every server call uses JSONP (a script tag). Objects are sent as JSON text in the query string.
 function apiGet(action, data) {
   return new Promise((resolve, reject) => {
     const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
     const params = new URLSearchParams();
     params.append('action', action);
     params.append('callback', cb);
-    Object.keys(data || {}).forEach(k => params.append(k, String(data[k])));
-
+    Object.keys(data || {}).forEach(k => {
+      const v = data[k];
+      params.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    });
     const s = document.createElement('script');
     const timer = setTimeout(() => { cleanup(); reject(new Error('No response from server')); }, 60000);
-
-    function cleanup() {
-      clearTimeout(timer);
-      delete window[cb];
-      s.remove();
-    }
-
+    function cleanup() { clearTimeout(timer); delete window[cb]; s.remove(); }
     window[cb] = r => { cleanup(); resolve(r); };
     s.onerror = () => { cleanup(); reject(new Error('Could not reach the server')); };
     s.src = API_URL + '?' + params.toString();
@@ -138,63 +115,56 @@ function apiGet(action, data) {
   });
 }
 
-// POST with a JSON body. Used for save and submit so answers never go in the URL.
-// Sends a form-encoded POST. Answers go in the body, never in the URL.
-async function apiPost(action, data) {
-  const body = new URLSearchParams();
-  body.append('action', action);
-  Object.keys(data || {}).forEach(k => {
-    const v = data[k];
-    body.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
-  });
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 60000);
-  try {
-    const res = await fetch(API_URL, { method: 'POST', body: body, signal: controller.signal });
-    return await res.json();
-  } catch (e) {
-    if (e.name === 'AbortError') throw new Error('No response from server');
-    throw new Error('Could not reach the server');
-  } finally {
-    clearTimeout(timer);
-  }
+// Shows the server version so you can confirm the student is on the current build.
+apiGet('ping', {}).then(r => {
+  $('ver').textContent = 'Server version: ' + (r && r.version ? r.version : 'unknown');
+}).catch(() => {});
+
+function setMsg(text, isErr) {
+  const m = $('msg');
+  if (m) { m.className = isErr ? 'msg center' : 'ok center'; m.textContent = text; }
 }
+
 // ---------- LOGIN ----------
 function renderLogin(msg) {
   show(`
     <h1>Student Login</h1>
     <p>Enter your student number. The exam is ${EXAM_MINUTES} minutes and the timer starts when you log in.</p>
     <input type="text" id="sno" inputmode="numeric" placeholder="Student number" autocomplete="off">
-    <div style="margin-top:14px"><button id="go">Start / Resume Exam</button></div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <button id="go">Start / Resume Exam</button>
+      <button id="check" class="secondary">Check my result</button>
+    </div>
     <div class="msg" id="msg"></div>
   `);
   $('msg').textContent = msg || '';
-  $('go').onclick = doLogin;
-  $('sno').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  $('go').onclick = () => doLogin(false);
+  $('check').onclick = () => doLogin(true);
+  $('sno').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(false); });
 }
 
-async function doLogin() {
+async function doLogin(resultOnly) {
   const no = $('sno').value.trim();
   if (!no) { $('msg').textContent = 'Please enter your student number.'; return; }
-  $('go').disabled = true;
   $('msg').textContent = 'Checking...';
   try {
-    onLogin(await apiGet('login', { studentNo: no }));
+    const r = resultOnly ? await apiGet('result', { studentNo: no }) : await apiGet('login', { studentNo: no });
+    if (r && r.submitted === true && Array.isArray(r.items)) { renderResult(r); return; }
+    if (resultOnly) { renderLogin((r && r.message) || 'Your result is not available yet.'); return; }
+    onLogin(r);
   } catch (e) {
-    $('go').disabled = false;
     $('msg').textContent = 'Error: ' + e.message + '. Please try again.';
   }
 }
 
 function onLogin(r) {
   if (!r || !r.ok) { renderLogin(r && r.message); return; }
-  if (r.submitted) { state.done = true; renderResult(r); return; }
   state.no = r.no;
   state.name = r.name;
-  // Each question is { id, q }. Keep the display order sent by the server.
+  if (r.submitted === true && Array.isArray(r.items)) { renderResult(r); return; }
   state.questions = r.questions;
   state.endAt = Date.now() + r.remaining * 1000;
-  renderExam(r.answers || []);
+  renderExam(r.answers || {});
 }
 
 // ---------- EXAM ----------
@@ -202,7 +172,7 @@ function renderExam(saved) {
   let html = `
     <div id="timer">Time left: <span id="clock">--:--</span></div>
     <h1>${esc(state.name)} &middot; ${esc(state.no)}</h1>
-    <p>Type your answer for each item. Answers are saved automatically every 30 seconds.</p>`;
+    <p>Answers are saved automatically. <span id="saved" class="saved"></span></p>`;
 
   state.questions.forEach((item, i) => {
     html += `
@@ -211,7 +181,7 @@ function renderExam(saved) {
           <div class="num">${i + 1}</div>
           <label for="a${i}">${esc(item.q)}</label>
         </div>
-        <input type="text" id="a${i}" maxlength="500" autocomplete="off">
+        <input type="text" id="a${i}" maxlength="150" autocomplete="off">
       </div>`;
   });
 
@@ -220,45 +190,49 @@ function renderExam(saved) {
     <div class="msg center" id="msg"></div>`;
 
   show(html);
-  state.questions.forEach((_, i) => { $('a' + i).value = saved[i] || ''; });
+  state.questions.forEach((item, i) => {
+    $('a' + i).value = saved[item.id] || '';
+    $('a' + i).addEventListener('change', autosave);
+  });
 
   $('submit').onclick = () => {
     if (confirm('Submit your exam now? You cannot change your answers after submitting.')) submitExam(false);
   };
-
   window.onbeforeunload = () => state.done ? null : 'Your exam is still in progress.';
   tick();
   state.timer = setInterval(tick, 1000);
   state.saveTimer = setInterval(autosave, 30000);
 }
 
+// Answers are keyed by question id, which is how the server stores them.
 function getAnswers() {
-  return state.questions.map((_, i) => $('a' + i).value);
+  const o = {};
+  state.questions.forEach((item, i) => { o[item.id] = $('a' + i).value; });
+  return o;
 }
 
 function tick() {
   const left = Math.max(0, Math.round((state.endAt - Date.now()) / 1000));
-  const m = Math.floor(left / 60);
-  const s = String(left % 60).padStart(2, '0');
   const el = $('clock');
-  if (el) el.textContent = `${m}:${s}`;
-  if (left <= 0 && !state.submitting && !state.done) submitExam(true);
+  if (el) el.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+  if (left <= 0 && !state.autoTried && !state.submitting && !state.done) {
+    state.autoTried = true;
+    submitExam(true);
+  }
 }
 
 function autosave() {
-  if (state.done || state.submitting) return;
-  apiPost('save', { studentNo: state.no, answers: getAnswers() }).catch(() => {});
+  if (state.done || state.submitting || !state.no) return;
+  apiGet('save', { studentNo: state.no, answers: getAnswers() })
+    .then(r => {
+      const el = $('saved');
+      if (el) el.textContent = r && r.ok ? 'Saved ' + new Date().toLocaleTimeString() : 'Not saved: ' + ((r && r.message) || '');
+    })
+    .catch(() => { const el = $('saved'); if (el) el.textContent = 'Not saved (no connection)'; });
 }
 
 async function submitExam(auto) {
   if (state.submitting || state.done) return;
-
-  const answers = getAnswers();
-  if (Object.values(answers).every(v => !String(v).trim())) {
-    setMsg('You have not typed any answers yet. Answer the questions, then press Submit.', true);
-    return;
-  }
-
   state.submitting = true;
   clearInterval(state.timer);
   clearInterval(state.saveTimer);
@@ -267,118 +241,105 @@ async function submitExam(auto) {
   setMsg(auto ? 'Time is up. Submitting your answers...' : 'Submitting...', false);
 
   try {
-    const r = await apiGet('submit', { studentNo: state.no, answers: answers, auto: auto ? 'true' : 'false' });
+    const r = await apiGet('submit', { studentNo: state.no, answers: getAnswers(), auto: auto ? 'true' : 'false' });
     if (r && r.submitted === true && Array.isArray(r.items)) { renderResult(r); return; }
+    // The server may already have this exam recorded. Ask for the result before reporting a failure.
     const again = await apiGet('result', { studentNo: state.no });
     if (again && again.submitted === true && Array.isArray(again.items)) { renderResult(again); return; }
     throw new Error((r && r.message) || 'Submission was not accepted.');
   } catch (e) {
     state.submitting = false;
-    setMsg('Submission failed: ' + e.message, true);
+    setMsg('Submission failed: ' + e.message + '. Your answers are saved on the server. Please press Submit again.', true);
     if (b) b.disabled = false;
     state.timer = setInterval(tick, 1000);
     state.saveTimer = setInterval(autosave, 30000);
   }
 }
+
 // ---------- RESULT ----------
-// r.score and r.items are null when the teacher has hidden scores, so only the message is shown.
 function renderResult(r) {
+  if (!r || r.submitted !== true || !Array.isArray(r.items)) {
+    show('<h1>Exam Result</h1><p class="center">Your result is not available until you submit the exam.</p>');
+    return;
+  }
+  // Keep the student details so the PDF button works after any way of opening the result.
+  state.no = r.no;
+  state.name = r.name;
+
   window.onbeforeunload = null;
   clearInterval(state.timer);
   clearInterval(state.saveTimer);
-  state.lastResult = r;
+  state.done = true;
 
-  const hasScore = r.showScore && r.score !== null && r.score !== undefined;
-  const hasItems = Array.isArray(r.items);
-  const pct = hasScore && r.total ? Math.round((r.score / r.total) * 100) : 0;
+  const shown = !!r.showScore && typeof r.score === 'number' && !!r.total;
+  const correct = shown ? r.score : 0;
+  const total = shown ? r.total : 0;
+  const pct = total ? ((correct / total) * 100).toFixed(1) : '0.0';
 
-  const itemsHtml = hasItems
-    ? r.items.map(it => `
-        <div class="qa">
-          <div><b>${it.no}. ${esc(it.question)}</b></div>
-          <div>Your answer: ${esc(it.answer || '(no answer)')}
-            <span class="${it.correct ? 'good' : 'bad'}">${it.correct ? 'Correct' : 'Incorrect'}</span></div>
-          ${it.correct ? '' : `<div class="ok">Correct answer: ${esc(it.correctAnswer)}</div>`}
-        </div>`).join('')
-    : '';
+  const summary = shown ? `
+    <div class="summary">
+      <div class="stat"><b>${correct} / ${total}</b><span>Score</span></div>
+      <div class="stat"><b>${pct}%</b><span>Percentage</span></div>
+      <div class="stat"><b>${correct}</b><span>Correct</span></div>
+      <div class="stat"><b>${total - correct}</b><span>Incorrect</span></div>
+    </div>` : '';
+
+  const warning = r.answered === 0
+    ? '<p class="warn">No answers were recorded for this exam. Please tell your teacher.</p>' : '';
+
+  const rows = r.items.map(it => {
+    const mark = shown
+      ? `<td class="${it.correct ? 'good' : 'bad'}">${it.correct ? 'Correct' : 'Incorrect'}</td>` : '';
+    const key = shown ? `<td>${esc(it.correctAnswer)}</td>` : '';
+    return `<tr><td>${it.no}</td><td>${esc(it.question)}</td><td>${esc(it.answer || '(no answer)')}</td>${key}${mark}</tr>`;
+  }).join('');
 
   show(`
     <h1>Exam Result</h1>
-    <p class="center">${esc(r.name)} &middot; ${esc(r.no)}</p>
-    ${hasScore ? `<div class="score">${esc(r.score)} / ${esc(r.total)}</div><p class="center">${pct}%</p>` : ''}
+    <p class="center">${esc(r.name)} &middot; ${esc(r.no)}${r.submittedAt ? ' &middot; Submitted ' + esc(r.submittedAt) : ''}</p>
+    ${summary}
     ${r.message ? `<p class="center">${esc(r.message)}</p>` : ''}
-    ${itemsHtml}
-    ${hasItems ? `<div class="center" style="margin-top:18px"><button id="dl">Download My Results</button></div>
-    <div class="center" id="dlmsg"></div>` : ''}
+    ${warning}
+    <table class="ans-table">
+      <tr><th>No.</th><th>Question</th><th>Your answer</th>${shown ? '<th>Correct answer</th><th>Result</th>' : ''}</tr>
+      ${rows}
+    </table>
+    <div class="center" style="margin-top:18px"><button id="dl">Download My Result (PDF)</button></div>
+    <div class="center" id="dlmsg"></div>
     <p class="center">You may close this page now.</p>
   `);
-
-  if (hasItems) $('dl').onclick = downloadResult;
+  $('dl').onclick = downloadPdf;
 }
 
-// Builds the result file in the browser from the data the server already sent.
-function downloadResult() {
+async function downloadPdf() {
+  const btn = $('dl');
   const msg = $('dlmsg');
-  const r = state.lastResult;
-  if (!r || !Array.isArray(r.items)) {
-    msg.className = 'msg';
-    msg.textContent = 'Could not download: results are not available yet.';
-    return;
-  }
-
-  const blob = new Blob([buildResultHtml(r)], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'Exam_Result_' + r.no + '.html';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-
+  btn.disabled = true;
   msg.className = 'ok';
-  msg.textContent = 'Your result was downloaded. Open the file and choose Print > Save as PDF if you need a PDF.';
+  msg.textContent = 'Preparing your PDF...';
+  try {
+    const r = await apiGet('pdf', { studentNo: state.no });
+    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not create the PDF.');
+    const bin = atob(r.base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = r.filename || ('Exam_Result_' + state.no + '.pdf');
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    msg.textContent = 'Your PDF was downloaded.';
+  } catch (e) {
+    msg.className = 'msg';
+    msg.textContent = 'Could not create the PDF: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
 }
 
-function buildResultHtml(r) {
-  const rows = r.items.map(it => {
-    const mark = it.correct === null || it.correct === undefined
-      ? ''
-      : (it.correct ? '<td class="good">Correct</td>' : '<td class="bad">Incorrect</td>');
-    return `<tr><td>${it.no}</td><td>${esc(it.question)}</td><td>${esc(it.answer || '(no answer)')}</td>${mark}</tr>`;
-  }).join('');
-
-  const scoreLine = r.showScore
-    ? `<p class="score">${esc(r.score)} / ${esc(r.total)}</p>`
-    : '';
-
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Exam Result</title>
-<style>
-  body { font-family: Arial, sans-serif; color: #111; max-width: 800px; margin: 24px auto; padding: 0 16px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  .meta { color: #555; margin-bottom: 12px; }
-  .score { font-size: 28px; font-weight: bold; color: #1e3a8a; margin: 12px 0; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; font-size: 14px; }
-  th { background: #e5e7eb; }
-  .good { color: #15803d; font-weight: bold; }
-  .bad { color: #b91c1c; font-weight: bold; }
-</style></head><body>
-<h1>${esc(EXAM_TITLE)}</h1>
-<div class="meta">
-  Professor: Dr. Jerwin Montellano &middot; Elective 3: E-Commerce<br>
-  ${esc(r.name)} &middot; ${esc(r.no)}${r.section ? ' &middot; ' + esc(r.section) : ''}<br>
-  Submitted: ${esc(r.submittedAt)}
-</div>
-${scoreLine}
-<table>
-  <tr><th>No.</th><th>Question</th><th>Your answer</th>${r.showScore ? '<th>Result</th>' : ''}</tr>
-  ${rows}
-</table>
-</body></html>`;
-}
-
-// Start: the page loads with an empty login form.
 renderLogin('');
 </script>
 </body>
