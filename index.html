@@ -1,345 +1,904 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CS 4 Exam</title>
-<style>
-  :root {
-    --brand: #1e3a8a;
-    --accent: #f97316;
-    --bg: #f3f4f6;
-    --card: #ffffff;
-    --text: #1f2937;
-    --muted: #6b7280;
-    --good: #15803d;
-    --bad: #b91c1c;
-  }
-  * { box-sizing: border-box; }
-  body { font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background: var(--bg); margin: 0; color: var(--text); }
-
-  .topbar { background: var(--brand); color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .brand { font-weight: 800; font-size: 18px; letter-spacing: .3px; }
-  .brand span { color: var(--accent); }
-  .topbar .tag { background: rgba(255,255,255,.15); padding: 6px 12px; border-radius: 999px; font-size: 13px; }
-
-  .banner { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #f97316 140%); color: #fff; padding: 26px 20px; }
-  .banner-inner { max-width: 900px; margin: 0 auto; }
-  .banner .course { font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; opacity: .9; margin: 0 0 6px; }
-  .banner h2 { margin: 0 0 12px; font-size: 24px; line-height: 1.25; }
-  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; }
-  .meta-chip { background: rgba(255,255,255,.18); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
-  .meta-chip b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; opacity: .85; font-weight: 600; }
-
-  .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
-  .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); margin-bottom: 16px; }
-  h1 { font-size: 20px; margin: 0 0 8px; }
-  p { line-height: 1.5; }
-
-  input[type=text] { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; }
-  input[type=text]:focus { outline: 2px solid var(--brand); border-color: transparent; }
-
-  button { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 12px 22px; font-size: 16px; font-weight: 600; cursor: pointer; }
-  button:hover { filter: brightness(.95); }
-  button:disabled { background: #9ca3af; cursor: default; }
-
-  #timer { position: sticky; top: 0; z-index: 5; background: #111827; color: #fff; padding: 12px; border-radius: 10px; text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
-
-  .q { background: var(--card); border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-  .q-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
-  .num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
-  .q label { font-weight: 600; line-height: 1.4; }
-
-  .msg { color: var(--bad); margin-top: 10px; }
-  .ok { color: var(--good); margin-top: 10px; }
-  .center { text-align: center; }
-
-  .score { font-size: 44px; font-weight: 800; text-align: center; color: var(--brand); margin: 18px 0 6px; }
-  .qa { border-top: 1px solid #e5e7eb; padding: 12px 0; }
-  .qa .good { color: var(--good); font-weight: 700; }
-  .qa .bad { color: var(--bad); font-weight: 700; }
-
-  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 16px 30px; }
-
-  @media (max-width: 480px) {
-    .banner h2 { font-size: 20px; }
-    .score { font-size: 36px; }
-  }
-</style>
-</head>
-<body>
-
-<div class="topbar">
-  <div class="brand">CS <span>4</span> Exam Portal</div>
-  <div class="tag">Elective 3 &middot; E-Commerce</div>
-</div>
-
-<div class="banner">
-  <div class="banner-inner">
-    <p class="course">Elective 3 &middot; E-Commerce</p>
-    <h2>CS 4 Exam: Security Governance &amp; Legal Issues</h2>
-    <div class="meta-row">
-      <div class="meta-chip"><b>Professor</b>Dr. Jerwin Montellano</div>
-      <div class="meta-chip"><b>Subject</b>Elective 3: E-Commerce</div>
-      <div class="meta-chip"><b>Duration</b>60 minutes</div>
-    </div>
-  </div>
-</div>
-
-<div class="wrap">
-  <div class="card" id="app"></div>
-</div>
-
-<footer>Dr. Jerwin Montellano &middot; Elective 3: E-Commerce</footer>
-
-<script>
-// The server fills in the URL of the web app this page was opened from.
-const API_URL = 'https://script.google.com/macros/s/AKfycbyz0tV71DJZqVQELt1T1azWjWlIGskDU3d74FS1xKDoViM-sdF-K-MYkOM9MaCeCZvz/exec';
-
+const APP_VERSION = 'answers-v9';
 const EXAM_TITLE = 'CS 4 Exam: Security Governance & Legal Issues';
 const EXAM_MINUTES = 60;
+const GRACE_SECONDS = 30;
+const ROSTER_SHEET = 'Roster';
+const ATTEMPTS_SHEET = 'Attempts';
+const ATT_COLS = 10;
+const ALLOW_RESULT_DOWNLOAD = false;
 
-const state = {
-  no: '', name: '', questions: [], endAt: 0,
-  timer: null, saveTimer: null,
-  done: false, submitting: false,
-  lastResult: null
-};
+// true = students see their score and answer review right after submitting.
+const SHOW_SCORE_TO_STUDENT = true;
 
-function $(id) { return document.getElementById(id); }
-function show(html) { $('app').innerHTML = html; }
-function esc(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Optional: Drive folder ID for the teacher's report (the part after /folders/ in the URL). Leave '' for My Drive root.
+const DRIVE_FOLDER_ID = '19KRaSyizByuCSlCwsa_5Wmky8Mv6cIbP';
+
+// Paste your spreadsheet ID here (the part between /d/ and /edit in the Sheet's URL).
+const SPREADSHEET_ID = '1nteAIgW53srMSc6zR5dzPahFLHUgouZJcShVrJu3PC4';
+
+// ---------- EXAM CONTENT (answers stay on the server) ----------
+const QUESTIONS = [
+  { q: "What is the framework of policies, roles, and decision-making authority that directs cybersecurity management called?", a: ["governance", "it governance", "cybersecurity governance"] },
+  { q: "What process involves identifying, assessing, and treating risks to keep exposure within acceptable tolerance levels?", a: ["risk management"] },
+  { q: "What term defines the adherence to mandatory external laws, regulatory mandates, industry standards, and internal policies?", a: ["compliance"] },
+  { q: "In the governance hierarchy, what mandatory, high-level overarching statements are set by senior executive leadership to define \"what\" and \"why\"?", a: ["policy", "policies"] },
+  { q: "In the governance hierarchy, what mandatory specific and measurable requirements are used to enforce policies consistently?", a: ["standard", "standards"] },
+  { q: "In the governance hierarchy, what term describes step-by-step instructions and operational workflows detailing exactly \"how to\" accomplish tasks?", a: ["procedure", "procedures", "sop", "standard operating procedure"] },
+  { q: "In the governance hierarchy, what optional level provides recommended best-practice advice and discretionary guidance for scenarios without strict mandates?", a: ["guideline", "guidelines"] },
+  { q: "Which core risk treatment option involves completely eliminating a risk by discontinuing or avoiding the business activity causing it?", a: ["avoid", "avoidance", "risk avoidance"] },
+  { q: "Which core risk treatment option involves shifting financial or operational risk to a third party, such as through cyber insurance or outsourcing?", a: ["transfer", "risk transfer"] },
+  { q: "Which core risk treatment option involves implementing security controls and safeguards to reduce the likelihood or impact of a risk?", a: ["mitigate", "mitigation", "risk mitigation"] },
+  { q: "Which core risk treatment option involves acknowledging and absorbing a risk without further action when the cost of treatment exceeds the risk impact?", a: ["accept", "acceptance", "risk acceptance"] },
+  { q: "What practice focuses on keeping overall business operations running during or after a disruption across the whole organization?", a: ["business continuity", "bc", "business continuity planning"] },
+  { q: "What practice focuses specifically on restoring technical IT systems, server infrastructure, and network assets after a disruption?", a: ["disaster recovery", "dr", "disaster recovery planning"] },
+  { q: "What BC/DR metric defines the maximum acceptable duration that systems can remain down before recovery?", a: ["recovery time objective", "rto"] },
+  { q: "What BC/DR metric defines the maximum acceptable data loss measured in time, which determines backup frequency?", a: ["recovery point objective", "rpo"] },
+  { q: "What BC/DR metric defines the longest period a function can fail before irreparable organizational damage occurs?", a: ["maximum tolerable downtime", "mtd"] },
+  { q: "What analysis process identifies critical business functions and sets RTO, RPO, and MTD values?", a: ["business impact analysis", "bia"] },
+  { q: "What design approach ensures continuous system operation with minimal downtime, targeting a reliability level often described as \"five nines\"?", a: ["high availability", "ha"] },
+  { q: "What system capability allows it to continue operating seamlessly even when a hardware component fails?", a: ["fault tolerance", "fault tolerant"] },
+  { q: "What term describes any single component whose failure will bring down an entire system?", a: ["single point of failure", "spof"] },
+  { q: "What type of alternative recovery site is fully equipped with servers, hardware, and networks with near real-time data replication?", a: ["hot site", "hot"] },
+  { q: "What type of alternative recovery site is partially equipped with operational core infrastructure and periodic backup synchronization?", a: ["warm site", "warm"] },
+  { q: "What type of alternative recovery site consists only of a basic facility (power, space, HVAC, wiring) with no pre-installed data or hardware?", a: ["cold site", "cold"] },
+  { q: "What specific type of targeted social engineering attack focuses exclusively on C-suite executives via email?", a: ["whaling", "whaling attack"] },
+  { q: "What form of social engineering uses voice-based phone deception to extract information?", a: ["vishing", "voice phishing"] },
+  { q: "What physical security breach method involves an unauthorized person following closely behind an authorized employee to gain entry?", a: ["tailgating", "piggybacking", "tailgating piggybacking"] },
+  { q: "What type of metric acts as an early warning signal of risk exposure to predict and highlight potential future problems?", a: ["key risk indicator", "kri"] },
+  { q: "What real-time, interactive, visual monitoring tool provides live metric tracking for technical security staff?", a: ["dashboard"] },
+  { q: "What periodic management summary uses red, yellow, and green visual indicators to measure performance against goals?", a: ["scorecard", "score card"] },
+  { q: "What technology utilizes asymmetric key pairs (a private key to sign and a public key to verify) to guarantee document authenticity and integrity?", a: ["public key infrastructure", "pki"] },
+  { q: "What legal property of digital signatures prevents senders from denying the origin of an electronic document once signed?", a: ["non-repudiation", "non repudiation", "nonrepudiation"] },
+  { q: "What automated B2B transaction framework replaces standard paper purchase orders and establishes rules of formation and risk allocation between trading partners?", a: ["edi", "electronic data interchange", "trading partner agreement", "trading partner agreements", "tpa", "edi tpa"] },
+  { q: "What landmark Philippine legislation enacted in June 2000 established legal recognition for digital transactions and electronic data messages?", a: ["republic act 8792", "republic act no 8792", "ra 8792", "ra8792", "e-commerce act", "philippine e-commerce act"] },
+  { q: "Under Section 30 of Republic Act Number 8792, what type of protection is granted to service providers regarding third-party content, provided they do not initiate or alter data?", a: ["conditional immunity"] },
+  { q: "What section of Republic Act Number 8792 explicitly criminalizes unauthorized system penetration (hacking and cracking) and digital piracy?", a: ["33", "section 33", "sec 33"] },
+  { q: "A string of text that maps to an alphanumeric IP address, used to access a website from client software. In plain English, a domain name is the text that a user types into a browser window to reach a particular website.", a: ["domain"] },
+  { q: "It sometimes called a web address, contains the domain name of a site as well as other information, including the protocol and the path.", a: ["url", "uniform resource locator"] },
+  { q: "It is the practice of registering a domain name in bad faith.", a: ["cybersquatting", "cybersquating", "domain squatting"] },
+  { q: "It is a business that coordinates the reservation of domain names. They allow individuals and businesses to lease domain names for a set period of time", a: ["domain name registrar", "domain registrar"] },
+  { q: "It is the practice of concealing domain registrant contact information from public view.", a: ["domain privacy", "whois privacy", "privacy protection", "domain privacy protection", "whois privacy protection"] }
+];
+
+// ---------- STUDENT ROSTER ----------
+// Non-ASCII letters are written as \uXXXX escapes so the file stays plain ASCII.
+const ROSTER_CS41 = [
+  ['202334096', 'BACANI, PATRICK JEROME'],
+  ['202334091', 'BATAC, MARY RUTH'],
+  ['202334088', 'CANTAL, HENKEPECK'],
+  ['202334004', 'CAPIRAL, LUIS GABRIEL'],
+  ['202334053', 'CO, KHURT LUIS'],
+  ['202334061', 'CORALES, CHARLIZ DANA'],
+  ['202334028', 'CORDOVA, VENELYN MAE'],
+  ['202334059', 'CRUZ, JOSHUA CARVEY'],
+  ['202334032', 'CRUZ, KRYZEL CASSANDRA'],
+  ['202334082', 'DE MESA, RITA ANGELI'],
+  ['202334036', 'FRIAS, RAILEY MIGUEL'],
+  ['202334037', 'GOYENA, SHAWN KIEFFER'],
+  ['202334062', 'ICBAN, JEPHTHA'],
+  ['202334015', 'KING, MARIANO LUIZ'],
+  ['202334043', 'MANGUNI, JOHN GABRIEL'],
+  ['202334090', 'MANIQUIS, RINOA JASMINE'],
+  ['202334046', 'MATANGA, SOPHIA VIEN'],
+  ['202334073', 'MUSNI, LORELIE JOY'],
+  ['202334071', 'NAVARRO, SOFIA ALEXI'],
+  ['202334060', 'PACOMIO, ADAM COLIN ZACHARY'],
+  ['202334039', 'PAJARITO, ROSE KRISHNA CASSANDRA'],
+  ['202334021', 'PALCOTO, RUSSELL ANDREW'],
+  ['202334057', 'PANGANIBAN, SHERWIN'],
+  ['202334052', 'PE\u00D1AFIEL, DANIELLA'],
+  ['202102596', 'RAMOS, JHAPET'],
+  ['202334068', 'RANCE, CARL JULLIAN'],
+  ['202334079', 'REYES, JOHN ANDREI'],
+  ['202334070', 'RODERO, KARLORENZO'],
+  ['202334049', 'SEGOVIA, ALIYAH LOISE'],
+  ['202334011', 'SIBAYAN, JOAN'],
+  ['202334045', 'VERDIDA, MAVERICK ISAIAH'],
+  ['202334012', 'YUPANO, DENESSE ADRIELLE']
+];
+
+const ROSTER_CS43 = [
+  ['202334050', 'ABUNDO, JONALENE RYZA'],
+  ['202334001', 'ALISWAG, KARYLLE VINCES'],
+  ['202334017', 'BALBOA, MARC JEROME'],
+  ['202334033', 'CAMACHO, DANIEL HARDY'],
+  ['202334103', 'CATACUTAN, RAPHAEL JAMES'],
+  ['202334023', 'CAYACAP, FAITH ALECZES'],
+  ['202334042', 'DALANGIN, HERSHEY ANNE'],
+  ['202334013', 'DE VERA, RAY ARVIN'],
+  ['202334048', 'DEL ROSARIO, JUANA MARI'],
+  ['202334025', 'DELOS SANTOS, CHRISTIAN ROCH'],
+  ['202334078', 'DIESTA, RAYMART'],
+  ['202334098', 'GERONA, MARC CEDRIC'],
+  ['202334077', 'GERONIMO, MARK JEROME'],
+  ['202102412', 'IBO, DANIELLA YSABELLE'],
+  ['202102552', 'ILASIN, LAUREN AUBREY'],
+  ['202334007', 'IWAG, JOHN MICHAEL'],
+  ['202252030', 'LAO, JIECO ANDRES'],
+  ['202334099', 'LIBANG, MICHAEL ANGELO'],
+  ['202334029', 'MABUTAS, CARLA'],
+  ['202334008', 'MAGAAN, FRIEDA MARIE'],
+  ['202334019', 'MULLENO, JESHAIAH MAE'],
+  ['202334101', 'OLIVERIO, BRENAN DWAYNE'],
+  ['202334018', 'PE\u00D1A, SYDNEY ANGELEVE'],
+  ['202334054', 'RAPIZ, JOSEPH PRINCE'],
+  ['202334067', 'RIVERA, RAMYLL'],
+  ['202334031', 'ROBANTE, FLOYD'],
+  ['202290051', 'SANCHEZ, TRICIA MAE'],
+  ['202334083', 'SANTOS, JANSEN JERHYN'],
+  ['202334066', 'TAN, HEZRON'],
+  ['202334044', 'VAFLOR, MARIEL KIM'],
+  ['202334051', 'VALENCIA, JIM RAFAEL']
+];
+
+// Combined roster with section labels
+const ROSTER = [
+  ...ROSTER_CS41.map(s => [s[0], s[1], 'CS 4-1']),
+  ...ROSTER_CS43.map(s => [s[0], s[1], 'CS 4-3'])
+];
+
+// ---------- WEB APP ENDPOINTS ----------
+
+// Turns Google access errors into a message the teacher can act on.
+// Returns the real error text so the page shows what failed. Logs the full stack for the Executions page.
+function accessError_(err) {
+  const m = String((err && err.message) || err || 'unknown error');
+  const where = (err && err.stack) ? String(err.stack).split('\n').slice(0, 3).join(' | ') : '';
+  Logger.log('SERVER ERROR: ' + m + ' @ ' + where);
+  return 'Server error: ' + m;
 }
 
-// All server calls use JSONP (a script tag). This is the same method that already works for login.
-// Objects and arrays are sent as JSON text in the query string.
-function apiGet(action, data) {
-  return new Promise((resolve, reject) => {
-    const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
-    const params = new URLSearchParams();
-    params.append('action', action);
-    params.append('callback', cb);
-    Object.keys(data || {}).forEach(k => {
-      const v = data[k];
-      params.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
-    });
-
-    const s = document.createElement('script');
-    const timer = setTimeout(() => { cleanup(); reject(new Error('No response from server')); }, 60000);
-
-    function cleanup() {
-      clearTimeout(timer);
-      delete window[cb];
-      s.remove();
-    }
-
-    window[cb] = r => { cleanup(); resolve(r); };
-    s.onerror = () => { cleanup(); reject(new Error('Could not reach the server')); };
-    s.src = API_URL + '?' + params.toString();
-    document.body.appendChild(s);
-  });
-}
-
-// ---------- LOGIN ----------
-function renderLogin(msg) {
-  show(`
-    <h1>Student Login</h1>
-    <p>Enter your student number. The exam is ${EXAM_MINUTES} minutes and the timer starts when you log in.</p>
-    <input type="text" id="sno" inputmode="numeric" placeholder="Student number" autocomplete="off">
-    <div style="margin-top:14px"><button id="go">Start / Resume Exam</button></div>
-    <div class="msg" id="msg"></div>
-  `);
-  $('msg').textContent = msg || '';
-  $('go').onclick = doLogin;
-  $('sno').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-}
-
-async function doLogin() {
-  const no = $('sno').value.trim();
-  if (!no) { $('msg').textContent = 'Please enter your student number.'; return; }
-  $('go').disabled = true;
-  $('msg').textContent = 'Checking...';
-  try {
-    onLogin(await apiGet('login', { studentNo: no }));
-  } catch (e) {
-    $('go').disabled = false;
-    $('msg').textContent = 'Error: ' + e.message + '. Please try again.';
-  }
-}
-
-function onLogin(r) {
-  if (!r || !r.ok) { renderLogin(r && r.message); return; }
-  state.no = r.no;
-  state.name = r.name;
-  if (r.submitted) { state.done = true; renderResult(r); return; }
-  state.questions = r.questions;
-  state.endAt = Date.now() + r.remaining * 1000;
-  renderExam(r.answers || []);
-}
-
-// ---------- EXAM ----------
-function renderExam(saved) {
-  let html = `
-    <div id="timer">Time left: <span id="clock">--:--</span></div>
-    <h1>${esc(state.name)} &middot; ${esc(state.no)}</h1>
-    <p>Type your answer for each item. Answers are saved automatically every 30 seconds.</p>`;
-
-  state.questions.forEach((item, i) => {
-    html += `
-      <div class="q">
-        <div class="q-head">
-          <div class="num">${i + 1}</div>
-          <label for="a${i}">${esc(item.q)}</label>
-        </div>
-        <input type="text" id="a${i}" maxlength="150" autocomplete="off">
-      </div>`;
-  });
-
-  html += `
-    <div class="center" style="margin-top:16px"><button id="submit">Submit Exam</button></div>
-    <div class="msg center" id="msg"></div>`;
-
-  show(html);
-  state.questions.forEach((_, i) => { $('a' + i).value = saved[i] || ''; });
-
-  $('submit').onclick = () => {
-    if (confirm('Submit your exam now? You cannot change your answers after submitting.')) submitExam(false);
-  };
-
-  window.onbeforeunload = () => state.done ? null : 'Your exam is still in progress.';
-  tick();
-  state.timer = setInterval(tick, 1000);
-  state.saveTimer = setInterval(autosave, 30000);
-}
-
-// Sends answers keyed by question id, so the server never has to guess the order.
-function getAnswers() {
-  const o = {};
-  state.questions.forEach((item, i) => { o[item.id] = $('a' + i).value; });
-  return o;
-}
-
-function tick() {
-  const left = Math.max(0, Math.round((state.endAt - Date.now()) / 1000));
-  const m = Math.floor(left / 60);
-  const s = String(left % 60).padStart(2, '0');
-  const el = $('clock');
-  if (el) el.textContent = `${m}:${s}`;
-  if (left <= 0 && !state.submitting && !state.done) submitExam(true);
-}
-
-function autosave() {
-  if (state.done || state.submitting) return;
-  apiGet('save', { studentNo: state.no, answers: getAnswers() }).catch(() => {});
-}
-
-async function submitExam(auto) {
-  if (state.submitting || state.done) return;
-  state.submitting = true;
-  clearInterval(state.timer);
-  clearInterval(state.saveTimer);
-  const b = $('submit');
-  if (b) b.disabled = true;
-  if ($('msg')) $('msg').textContent = auto ? 'Time is up. Submitting your answers...' : 'Submitting...';
-
-  try {
-    const r = await apiGet('submit', {
-      studentNo: state.no,
-      answers: getAnswers(),
-      auto: auto ? 'true' : 'false'
-    });
-    if (!r || !r.ok) throw new Error((r && r.message) || 'Submission was not accepted.');
-    state.done = true;
-    renderResult(r);
-  } catch (e) {
-    state.submitting = false;
-    if ($('msg')) $('msg').textContent = 'Submission failed: ' + e.message + '. Your answers are saved. Please press Submit again.';
-    if (b) {
-      b.disabled = false;
-      b.onclick = () => {
-        if (confirm('Submit your exam now? You cannot change your answers after submitting.')) submitExam(false);
-      };
-    }
-    if (!auto) {
-      state.timer = setInterval(tick, 1000);
-      state.saveTimer = setInterval(autosave, 30000);
+// Page request: serves the exam. API request (?action=...): returns JSON or JSONP.
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  if (p.action) {
+    try {
+      ensureSetup_();
+      const d = Object.assign({}, p);
+      try { d.answers = JSON.parse(p.answers || '[]'); } catch (err) { d.answers = []; }
+      return json_(handle_(p.action, d), p.callback);
+    } catch (err) {
+      return json_({ ok: false, message: accessError_(err) }, p.callback);
     }
   }
+  const t = HtmlService.createTemplateFromFile('Index');
+  t.endpoint = ScriptApp.getService().getUrl();
+  return t.evaluate()
+    .setTitle(EXAM_TITLE)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-// ---------- RESULT ----------
-function renderResult(r) {
-  window.onbeforeunload = null;
-  clearInterval(state.timer);
-  clearInterval(state.saveTimer);
-  state.lastResult = r;
-
-  const hasScore = r.showScore && r.score !== null && r.score !== undefined;
-  const hasItems = Array.isArray(r.items);
-  const pct = hasScore && r.total ? Math.round((r.score / r.total) * 100) : 0;
-
-  const itemsHtml = hasItems
-    ? r.items.map(it => `
-        <div class="qa">
-          <div><b>${it.no}. ${esc(it.question)}</b></div>
-          <div>Your answer: ${esc(it.answer || '(no answer)')}
-            ${it.correct === null ? '' : `<span class="${it.correct ? 'good' : 'bad'}">${it.correct ? 'Correct' : 'Incorrect'}</span>`}</div>
-          ${it.correct === false ? `<div class="ok">Correct answer: ${esc(it.correctAnswer)}</div>` : ''}
-        </div>`).join('')
-    : '';
-
-  show(`
-    <h1>Exam Result</h1>
-    <p class="center">${esc(r.name)} &middot; ${esc(r.no)}</p>
-    ${hasScore ? `<div class="score">${esc(r.score)} / ${esc(r.total)}</div><p class="center">${pct}%</p>` : ''}
-    ${r.message ? `<p class="center">${esc(r.message)}</p>` : ''}
-    ${itemsHtml}
-    ${hasItems ? `<div class="center" style="margin-top:18px"><button id="dl">Download My Result (PDF)</button></div>
-    <div class="center" id="dlmsg"></div>` : ''}
-    <p class="center">You may close this page now.</p>
-  `);
-
-  if (hasItems) $('dl').onclick = downloadPdf;
-}
-
-// Asks the server for the student's own PDF, then saves it on the device.
-async function downloadPdf() {
-  const msg = $('dlmsg');
-  const btn = $('dl');
-  const no = (state.lastResult && state.lastResult.no) || state.no;
-  btn.disabled = true;
-  msg.className = 'ok';
-  msg.textContent = 'Preparing your PDF...';
+// POST body is JSON (sent as text/plain). Used for save and submit so answers never go in the URL.
+// Accepts form-encoded POST (used by the page) and JSON text bodies (kept as a fallback).
+function doPost(e) {
   try {
-    const r = await apiGet('pdf', { studentNo: no });
-    if (!r || !r.ok) throw new Error((r && r.message) || 'Could not create the PDF.');
-
-    const bin = atob(r.base64);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-
-    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = r.filename || ('Exam_Result_' + no + '.pdf');
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 3000);
-
-    msg.textContent = 'Your PDF was downloaded.';
-  } catch (e) {
-    msg.className = 'msg';
-    msg.textContent = 'Could not create the PDF: ' + e.message;
+    ensureSetup_();
+    const body = parsePost_(e);
+    Logger.log('POST action=' + body.action + ' studentNo=' + body.studentNo +
+      ' answersReceived=' + countFilled_(cleanAnswers_(body.answers)));
+    return json_(handle_(body.action, body));
+  } catch (err) {
+    return json_({ ok: false, message: accessError_(err) });
+  }
+}
+// Editor only. Submits an in-progress exam using the answers already stored in the Attempts sheet.
+function finalizeStudent() {
+  const no = '202334082';
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = attemptsSheet_();
+    const row = findAttemptRow_(sh, no);
+    if (!row) { Logger.log('No Attempts row for ' + no); return; }
+    const v = readAttempt_(sh, row);
+    if (v[4] === 'SUBMITTED') { Logger.log('Already submitted. Score: ' + v[6]); return; }
+    const st = findStudent_(no);
+    const canon = storedCanon_(v, no);
+    Logger.log('Stored answers: ' + countFilled_(canon) + ' of ' + QUESTIONS.length);
+    finalize_(sh, row, st, canon);
+    Logger.log('Submitted. Score: ' + scoreOf_(canon));
   } finally {
-    btn.disabled = false;
+    lock.releaseLock();
+  }
+}
+function parsePost_(e) {
+  const body = Object.assign({}, (e && e.parameter) || {});
+  const contents = e && e.postData && e.postData.contents;
+  if (contents && contents.trim().charAt(0) === '{') {
+    try { Object.assign(body, JSON.parse(contents)); } catch (err) { /* ignore bad JSON */ }
+  }
+  let ans = body.answers;
+  if (typeof ans === 'string') {
+    try { ans = JSON.parse(ans); } catch (err) { ans = []; }
+  }
+  body.answers = Array.isArray(ans) ? ans : [];
+  return body;
+}
+// Optional: run once from the Apps Script editor to approve permissions and create sheets now.
+function setupSheets() {
+  ensureSetup_();
+}
+
+// ---------- SPREADSHEET ACCESS ----------
+function ss_() {
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
+
+// ---------- AUTOMATIC SHEET CREATION ----------
+// Called once per request in doGet/doPost. Never called from inside a locked section.
+function ensureSetup_() {
+  if (setupOk_()) return;
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    createSetup_();
+  } finally {
+    lock.releaseLock();
   }
 }
 
-// Start: the page loads with an empty login form.
-renderLogin('');
-</script>
-</body>
-</html>
+function setupOk_() {
+  const ss = ss_();
+  const r = ss.getSheetByName(ROSTER_SHEET);
+  const a = ss.getSheetByName(ATTEMPTS_SHEET);
+  return !!(r && a && a.getLastRow() >= 1 && r.getLastRow() >= ROSTER.length + 1);
+}
+
+function createSetup_() {
+  const ss = ss_();
+
+  let r = ss.getSheetByName(ROSTER_SHEET);
+  if (!r) r = ss.insertSheet(ROSTER_SHEET);
+  if (r.getLastRow() === 0) {
+    r.getRange(1, 1, 1, 3).setValues([['Student No', 'Student Name', 'Section']]).setFontWeight('bold');
+  }
+  r.getRange('A:A').setNumberFormat('@');
+
+  let a = ss.getSheetByName(ATTEMPTS_SHEET);
+  if (!a) a = ss.insertSheet(ATTEMPTS_SHEET);
+  if (a.getLastRow() === 0) {
+    a.getRange(1, 1, 1, ATT_COLS)
+      .setValues([['Student No', 'Student Name', 'Section', 'Start Time', 'Status', 'Answers (JSON)', 'Score', 'Submitted At', 'Answer Order', 'Raw Received (debug)']])
+      .setFontWeight('bold');
+  }
+  a.getRange('A:A').setNumberFormat('@');
+
+  loadRoster_(r);
+}
+
+// Adds missing students and fills blank Section cells. Existing rows are never overwritten.
+function loadRoster_(r) {
+  const vals = r.getDataRange().getValues();
+  const rowByNo = {};
+  for (let i = 1; i < vals.length; i++) rowByNo[normNo_(vals[i][0])] = i + 1;
+
+  ROSTER.forEach(s => {
+    const row = rowByNo[s[0]];
+    if (row) {
+      if (!String(vals[row - 1][2] || '').trim()) r.getRange(row, 3).setValue(s[2]);
+    } else {
+      r.appendRow([s[0], s[1], s[2]]);
+    }
+  });
+}
+
+// ---------- API ----------
+// Students can only reach these actions. "ping" lets you check which code a deployment runs.
+function handle_(action, d) {
+  try {
+    d = d || {};
+    if (action === 'ping') return { ok: true, version: APP_VERSION, questions: QUESTIONS.length };
+    if (action === 'login') return login_(d.studentNo);
+    if (action === 'save') return saveProgress_(d.studentNo, d.answers);
+    if (action === 'submit') return submitExam_(d.studentNo, d.answers, d.auto === 'true' || d.auto === true);
+    if (action === 'result') return myResult_(d.studentNo);
+    return { ok: false, message: 'Unknown action.' };
+  } catch (err) {
+    return { ok: false, message: accessError_(err) };
+  }
+}
+
+// Returns JSON, or JSONP when a callback name is given.
+function json_(obj, callback) {
+  if (callback && /^[A-Za-z_][A-Za-z0-9_.]*$/.test(callback)) {
+    return ContentService.createTextOutput(callback + '(' + JSON.stringify(obj) + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Returns only the student's own submitted answers. The answer key is never included.
+function myResult_(studentNo) {
+  if (!ALLOW_RESULT_DOWNLOAD) return { ok: false, message: 'Result download is not available.' };
+
+  const no = normNo_(studentNo);
+  const st = findStudent_(no);
+  if (!st) return { ok: false, message: 'Student not found.' };
+
+  const sh = attemptsSheet_();
+  const row = findAttemptRow_(sh, no);
+  if (!row) return { ok: false, message: 'No exam record found.' };
+
+  const v = readAttempt_(sh, row);
+  if (v[4] !== 'SUBMITTED') return { ok: false, message: 'Results are available after you submit the exam.' };
+
+  return resultPayload_(st, storedCanon_(v, no), v[7]);
+}
+
+// Login only reads and creates rows. It takes the lock once and calls no other locked function.
+function login_(studentNo) {
+  const no = normNo_(studentNo);
+  const st = findStudent_(no);
+  if (!st) return { ok: false, message: 'Student number not found. Check your number or ask your teacher.' };
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = attemptsSheet_();
+    const row = findAttemptRow_(sh, no);
+    const now = new Date();
+
+    if (!row) {
+      sh.appendRow([st.no, st.name, st.section, now, 'IN_PROGRESS', '[]', '', '', 'canon', '']);
+      return startPayload_(st, cleanAnswers_([]), EXAM_MINUTES * 60);
+    }
+
+    const v = readAttempt_(sh, row);
+    const canon = storedCanon_(v, no);
+    if (v[4] === 'SUBMITTED') return resultPayload_(st, canon, v[7]);
+
+    const remaining = EXAM_MINUTES * 60 - (now - new Date(v[3])) / 1000;
+    if (remaining <= -GRACE_SECONDS) return finalize_(sh, row, st, canon);
+    return startPayload_(st, canon, remaining);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Counts answers that contain text.
+function countFilled_(arr) {
+  return arr.filter(a => String(a == null ? '' : a).trim() !== '').length;
+}
+
+// Save: locked, so it cannot overlap with submit.
+// Incoming answers are in the student's display order and are converted to original order before storing.
+function saveProgress_(studentNo, answers) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const no = normNo_(studentNo);
+    const sh = attemptsSheet_();
+    const row = findAttemptRow_(sh, no);
+    if (!row) return { ok: false, message: 'No active exam found. Please log in again.' };
+
+    const v = readAttempt_(sh, row);
+    if (v[4] !== 'IN_PROGRESS') return { ok: false, message: 'This exam was already submitted.' };
+
+    const remaining = EXAM_MINUTES * 60 - (new Date() - new Date(v[3])) / 1000;
+    if (remaining <= -GRACE_SECONDS) return { ok: false, expired: true };
+
+    logRaw_(sh, row, answers);
+    const best = bestCanon_(answers, storedCanon_(v, no), no);
+    sh.getRange(row, 6).setValue(JSON.stringify(best));
+    sh.getRange(row, 9).setValue('canon');
+    Logger.log('SAVE ' + no + ' received=' + countFilled_(cleanAnswers_(answers)) + ' stored=' + countFilled_(best));
+    return { ok: true, filled: countFilled_(best) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Submit: locked, so a late autosave cannot overwrite the final answers.
+function submitExam_(studentNo, answers, auto) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const no = normNo_(studentNo);
+    const st = findStudent_(no);
+    if (!st) return { ok: false, message: 'Student not found.' };
+
+    const sh = attemptsSheet_();
+    const row = findAttemptRow_(sh, no);
+    if (!row) return { ok: false, message: 'No active exam found. Please log in again.' };
+
+    const v = readAttempt_(sh, row);
+    const stored = storedCanon_(v, no);
+    if (v[4] === 'SUBMITTED') return resultPayload_(st, stored, v[7]);
+
+    logRaw_(sh, row, answers);
+    const remaining = EXAM_MINUTES * 60 - (new Date() - new Date(v[3])) / 1000;
+    const canon = remaining > -GRACE_SECONDS ? bestCanon_(answers, stored, no) : stored;
+
+    Logger.log('SUBMIT ' + no + ' received=' + countFilled_(cleanAnswers_(answers)) + ' final=' + countFilled_(canon));
+
+    // A student-initiated submit with no answers received is rejected, so the record is not finalized blank.
+    if (countFilled_(canon) === 0 && !auto) {
+      return { ok: false, message: 'No answers were received, so your exam was not submitted. Check your connection and press Submit again.' };
+    }
+
+    return finalize_(sh, row, st, canon);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ---------- ANSWER ORDER ----------
+// Each student sees the questions in a shuffled order (orderFor_). The browser sends and receives
+// answers in that display order. The server stores and scores answers in the ORIGINAL question order.
+// Column I of Attempts marks rows stored this way as 'canon'. Older rows have no marker and were
+// stored in display order, so they are converted when read.
+
+// Display-order answers -> original question order.
+function displayToCanon_(displayAns, no) {
+  const order = orderFor_(no);
+  const disp = cleanAnswers_(displayAns);
+  const canon = QUESTIONS.map(() => '');
+  order.forEach((qi, k) => { canon[qi] = disp[k]; });
+  return canon;
+}
+
+// Original question order -> display order (what the student sees).
+function canonToDisplay_(canonAns, no) {
+  const order = orderFor_(no);
+  return order.map(qi => String(canonAns[qi] == null ? '' : canonAns[qi]));
+}
+
+// Reads a stored attempt's answers in original question order, whatever format they were saved in.
+function storedCanon_(v, no) {
+  const raw = safeParse_(v[5]);
+  return v[8] === 'canon' ? raw : displayToCanon_(raw, no);
+}
+
+// Chooses the incoming answers unless they have fewer filled items than what is already stored.
+// Incoming answers are display-order; the result is in original order.
+function bestCanon_(incomingDisplay, storedCanonical, no) {
+  const inc = displayToCanon_(incomingDisplay, no);
+  return countFilled_(inc) >= countFilled_(storedCanonical) ? inc : storedCanonical;
+}
+
+// Number of correct answers in original question order.
+function scoreOf_(canon) {
+  let score = 0;
+  QUESTIONS.forEach((q, i) => { if (isCorrect_(canon[i], q.a)) score++; });
+  return score;
+}
+
+// ---------- HELPERS ----------
+function readAttempt_(sh, row) {
+  return sh.getRange(row, 1, 1, ATT_COLS).getValues()[0];
+}
+
+// Keeps a copy of exactly what the server received, so blank answers can be traced to their source.
+function logRaw_(sh, row, answers) {
+  let text;
+  try { text = JSON.stringify(answers === undefined ? null : answers); }
+  catch (e) { text = 'unserializable: ' + e.message; }
+  sh.getRange(row, 10).setValue((new Date()).toISOString() + ' ' + String(text).slice(0, 45000));
+}
+
+// Writes the final result. canon must be in original question order.
+function finalize_(sh, row, st, canon) {
+  sh.getRange(row, 5, 1, 4).setValues([['SUBMITTED', JSON.stringify(canon), scoreOf_(canon), new Date()]]);
+  sh.getRange(row, 9).setValue('canon');
+  return resultPayload_(st, canon, new Date());
+}
+
+// Returns a fixed random order of question indexes for one student.
+// The same student always gets the same order, so refreshing does not change it.
+function orderFor_(no) {
+  let seed = 0;
+  for (const ch of String(no)) seed = (Math.imul(seed, 31) + ch.charCodeAt(0)) >>> 0;
+  const idx = QUESTIONS.map((_, i) => i);
+  for (let i = idx.length - 1; i > 0; i--) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const j = seed % (i + 1);
+    [idx[i], idx[j]] = [idx[j], idx[i]];
+  }
+  return idx;
+}
+
+// canon: answers in original question order. They are sent to the student in display order.
+function startPayload_(st, canon, remaining) {
+  const order = orderFor_(st.no);
+  return {
+    ok: true,
+    submitted: false,
+    no: st.no,
+    name: st.name,
+    questions: order.map(i => ({ id: i, q: QUESTIONS[i].q })),
+    answers: canonToDisplay_(canon, st.no),
+    remaining: Math.max(0, Math.min(EXAM_MINUTES * 60, Math.floor(remaining)))
+  };
+}
+
+// Students never receive the answer key. Score and answer review are included only when SHOW_SCORE_TO_STUDENT is true.
+function resultPayload_(st, canon, submittedAt) {
+  const shown = SHOW_SCORE_TO_STUDENT;
+  const when = submittedAt instanceof Date
+    ? Utilities.formatDate(submittedAt, Session.getScriptTimeZone(), 'MMMM d, yyyy h:mm a')
+    : '';
+  return {
+    ok: true,
+    submitted: true,
+    no: st.no,
+    name: st.name,
+    section: st.section,
+    submittedAt: when,
+    showScore: shown,
+    score: shown ? scoreOf_(canon) : null,
+    total: shown ? QUESTIONS.length : null,
+    message: shown ? '' : 'Your exam has been submitted. Your teacher will release the results.',
+    items: shown ? QUESTIONS.map((q, i) => ({
+      no: i + 1,
+      question: q.q,
+      answer: canon[i] || '',
+      correct: isCorrect_(canon[i], q.a),
+      correctAnswer: q.a[0]
+    })) : null
+  };
+}
+
+function isCorrect_(ans, accepted) {
+  if (!ans) return false;
+  const n = norm_(ans);
+  return accepted.some(a => norm_(a) === n);
+}
+
+function norm_(s) {
+  return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function normNo_(v) {
+  return String(v == null ? '' : v).trim();
+}
+
+function cleanAnswers_(a) {
+  const arr = Array.isArray(a) ? a : [];
+  return QUESTIONS.map((_, i) => String(arr[i] == null ? '' : arr[i]).slice(0, 500));
+}
+
+function safeParse_(s) {
+  try { return cleanAnswers_(JSON.parse(s || '[]')); }
+  catch (e) { return cleanAnswers_([]); }
+}
+
+// Lock-free helper: does not call ensureSetup_, so it is safe inside locked sections.
+function attemptsSheet_() {
+  const sh = ss_().getSheetByName(ATTEMPTS_SHEET);
+  if (!sh) throw new Error('Attempts sheet is missing');
+  return sh;
+}
+
+function findStudent_(no) {
+  const sh = ss_().getSheetByName(ROSTER_SHEET);
+  if (!sh) throw new Error('Roster sheet is missing');
+  const vals = sh.getDataRange().getValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (normNo_(vals[i][0]) === no) {
+      return { no: no, name: String(vals[i][1]).trim(), section: String(vals[i][2] || '').trim() };
+    }
+  }
+  return null;
+}
+
+function findAttemptRow_(sh, no) {
+  const vals = sh.getDataRange().getValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (normNo_(vals[i][0]) === no) return i + 1;
+  }
+  return 0;
+}
+
+// ---------- TEACHER TOOLS (EDITOR ONLY) ----------
+
+// Prints one student's Attempts row and the scored answers. Select it, click Run, then open View > Logs.
+// Replace the number below with the student number you are checking.
+function debugStudent() {
+  const no = '202334096';
+  const sh = attemptsSheet_();
+  const row = findAttemptRow_(sh, no);
+  if (!row) { Logger.log('No Attempts row for ' + no); return; }
+  const v = readAttempt_(sh, row);
+  Logger.log('Status: ' + v[4]);
+  Logger.log('Answer Order marker: ' + v[8]);
+  Logger.log('Raw Received (col J): ' + String(v[9]).slice(0, 500));
+  Logger.log('Stored answers (col F): ' + String(v[5]).slice(0, 500));
+  const canon = storedCanon_(v, no);
+  Logger.log('Filled answers: ' + countFilled_(canon) + ' of ' + QUESTIONS.length);
+  Logger.log('Score: ' + scoreOf_(canon));
+}
+
+// Converts every stored attempt (in progress or submitted) to original question order and recalculates scores.
+// Run ONCE from the editor after the previous update. Safe to run again.
+function rescoreAll() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = attemptsSheet_();
+    sh.getRange(1, 9).setValue('Answer Order').setFontWeight('bold');
+    sh.getRange(1, 10).setValue('Raw Received (debug)').setFontWeight('bold');
+    const vals = sh.getDataRange().getValues();
+    let updated = 0;
+    for (let i = 1; i < vals.length; i++) {
+      const no = normNo_(vals[i][0]);
+      const status = vals[i][4];
+      if (!no || (status !== 'SUBMITTED' && status !== 'IN_PROGRESS')) continue;
+      const canon = storedCanon_(vals[i], no);
+      const row = i + 1;
+      sh.getRange(row, 6).setValue(JSON.stringify(canon));
+      sh.getRange(row, 7).setValue(status === 'SUBMITTED' ? scoreOf_(canon) : '');
+      sh.getRange(row, 9).setValue('canon');
+      updated++;
+    }
+    Logger.log('Converted and rescored ' + updated + ' attempts against ' + QUESTIONS.length + ' questions.');
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Checks the scoring logic without touching the sheet. Run from the editor and read View > Logs.
+function testScoring() {
+  const no = ROSTER[0][0];
+  const correctCanon = QUESTIONS.map(q => q.a[0]);
+  const displayed = canonToDisplay_(correctCanon, no);
+  const back = displayToCanon_(displayed, no);
+  const roundTrip = back.every((a, i) => a === correctCanon[i]);
+  Logger.log('Round trip OK: ' + roundTrip);
+  Logger.log('Score for all-correct answers: ' + scoreOf_(back) + ' / ' + QUESTIONS.length);
+}
+
+// Authorizes Drive and Sheets. Run once from the editor.
+function authorizeDrive() {
+  DriveApp.getRootFolder().getName();
+  SpreadsheetApp.openById(SPREADSHEET_ID).getName();
+  Logger.log('Permissions OK');
+}
+
+// Run from the editor to check spreadsheet, sheets, and Drive folder. Then open View > Logs.
+function diagnose() {
+  try {
+    Logger.log('Spreadsheet OK: ' + ss_().getName());
+  } catch (e) {
+    Logger.log('SPREADSHEET ERROR: ' + e.message);
+    return;
+  }
+  try {
+    ensureSetup_();
+    Logger.log('Roster and Attempts sheets OK. Attempts rows (incl. header): ' + attemptsSheet_().getLastRow());
+  } catch (e) {
+    Logger.log('SETUP ERROR: ' + e.message);
+  }
+  if (DRIVE_FOLDER_ID) {
+    try {
+      Logger.log('Drive folder OK: ' + DriveApp.getFolderById(DRIVE_FOLDER_ID).getName());
+    } catch (e) {
+      Logger.log('DRIVE FOLDER ERROR: ' + e.message);
+    }
+  }
+}
+
+// ---------- TEACHER PDF REPORT (EDITOR ONLY) ----------
+// Returns the report folder, or My Drive root if the configured folder is not accessible.
+// Returns the configured Drive folder, or null if the script cannot open it.
+function getReportFolder_() {
+  if (!DRIVE_FOLDER_ID) return null;
+  try {
+    return DriveApp.getFolderById(DRIVE_FOLDER_ID);
+  } catch (e) {
+    Logger.log('Report folder not accessible: ' + e.message);
+    return null;
+  }
+}
+
+// Select createExamReport in the dropdown and click Run. It is not reachable from the web app.
+// Saves a PDF to Drive. If Drive is not accessible, writes the report to the "Report" sheet instead.
+function createExamReport() {
+  const tz = Session.getScriptTimeZone();
+  const data = buildReportData_();
+  const stamp = Utilities.formatDate(new Date(), tz, 'MMMM d, yyyy h:mm a');
+  const fileStamp = Utilities.formatDate(new Date(), tz, 'yyyyMMdd_HHmm');
+
+  try {
+    const blob = HtmlService.createHtmlOutput(reportHtml_(data, stamp))
+      .getAs(MimeType.PDF)
+      .setName('CS4_Exam_Report_' + fileStamp + '.pdf');
+
+    const folder = getReportFolder_();
+    const file = folder ? folder.createFile(blob) : DriveApp.createFile(blob);
+
+    try {
+      file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+    } catch (e) {
+      Logger.log('Sharing setting not changed: ' + e.message);
+    }
+    Logger.log('Report saved to Drive: ' + file.getUrl());
+  } catch (e) {
+    Logger.log('Drive save failed (' + e.message + '). Writing the report to the Report sheet instead.');
+    saveReportToSheet_(data, stamp);
+    Logger.log('Report written to the "Report" sheet of the exam spreadsheet.');
+  }
+}
+
+// Fallback: writes the same report as rows in a "Report" sheet. Needs only spreadsheet access.
+function saveReportToSheet_(d, stamp) {
+  const ss = ss_();
+  let sh = ss.getSheetByName('Report');
+  if (sh) sh.clear(); else sh = ss.insertSheet('Report');
+
+  const total = QUESTIONS.length;
+  const N = d.submitted;
+  const pct = (x, y) => y ? ((x / y) * 100).toFixed(1) + '%' : '0.0%';
+  const mean = N ? (d.students.reduce((t, s) => t + s.score, 0) / N).toFixed(2) : '0.00';
+  const rows = [];
+
+  rows.push([EXAM_TITLE]);
+  rows.push(['Professor: Dr. Jerwin Montellano · Elective 3: E-Commerce']);
+  rows.push(['Report generated', stamp]);
+  rows.push([]);
+  rows.push(['SUMMARY']);
+  rows.push(['Students on roster', d.rosterCount]);
+  rows.push(['Submitted', N]);
+  rows.push(['In progress', d.inProgress]);
+  rows.push(['Not yet started', d.notStarted]);
+  rows.push(['Mean score (submitted)', mean + ' / ' + total]);
+  rows.push([]);
+
+  rows.push(['SCORE FREQUENCY DISTRIBUTION']);
+  rows.push(['Score', 'Frequency', 'Percent', 'Cumulative frequency', 'Cumulative percent']);
+  let cum = 0;
+  for (let s = 0; s <= total; s++) {
+    const f = d.scoreFreq[s] || 0;
+    if (!f) continue;
+    cum += f;
+    rows.push([s + ' / ' + total, f, pct(f, N), cum, pct(cum, N)]);
+  }
+  if (rows[rows.length - 1][0] === 'Score') rows.push(['No submitted exams yet.']);
+  rows.push([]);
+
+  rows.push(['ITEM ANALYSIS']);
+  rows.push(['No.', 'Item', 'Answer key', 'Correct (frequency)', 'Percent correct', 'Difficulty']);
+  QUESTIONS.forEach((q, i) => {
+    const c = d.itemCorrect[i];
+    const p = N ? c / N : 0;
+    const diff = p >= 0.7 ? 'Easy' : (p >= 0.3 ? 'Moderate' : 'Difficult');
+    rows.push([i + 1, q.q, q.a[0], c, pct(c, N), diff]);
+  });
+  rows.push([]);
+
+  rows.push(['STUDENT RESULTS']);
+  rows.push(['Section', 'Student No', 'Name', 'Score', 'Percent']);
+  d.students.slice()
+    .sort((a, b) => a.section.localeCompare(b.section) || a.name.localeCompare(b.name))
+    .forEach(s => rows.push([s.section, s.no, s.name, s.score + ' / ' + total, pct(s.score, total)]));
+
+  const width = Math.max.apply(null, rows.map(r => r.length));
+  const padded = rows.map(r => {
+    const out = r.slice();
+    while (out.length < width) out.push('');
+    return out;
+  });
+  sh.getRange(1, 1, padded.length, width).setValues(padded);
+  sh.getRange(1, 1).setFontWeight('bold').setFontSize(13);
+  sh.autoResizeColumns(1, width);
+}
+function buildReportData_() {
+  const sh = attemptsSheet_();
+  const rows = sh.getDataRange().getValues().slice(1).filter(r => normNo_(r[0]) !== '');
+  const done = rows.filter(r => r[4] === 'SUBMITTED');
+  const itemCorrect = QUESTIONS.map(() => 0);
+
+  const students = done.map(r => {
+    const no = normNo_(r[0]);
+    const canon = storedCanon_(r, no);
+    QUESTIONS.forEach((q, i) => {
+      if (isCorrect_(canon[i], q.a)) itemCorrect[i]++;
+    });
+    return { no: no, name: String(r[1]).trim(), section: String(r[2]).trim(), score: scoreOf_(canon) };
+  });
+
+  const scoreFreq = {};
+  students.forEach(s => { scoreFreq[s.score] = (scoreFreq[s.score] || 0) + 1; });
+
+  return {
+    rosterCount: ROSTER.length,
+    attempts: rows.length,
+    inProgress: rows.filter(r => r[4] === 'IN_PROGRESS').length,
+    submitted: done.length,
+    notStarted: Math.max(0, ROSTER.length - rows.length),
+    students: students,
+    itemCorrect: itemCorrect,
+    scoreFreq: scoreFreq
+  };
+}
+
+function reportHtml_(d, stamp) {
+  const e = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const total = QUESTIONS.length;
+  const N = d.submitted;
+  const pct = (x, y) => y ? ((x / y) * 100).toFixed(1) + '%' : '0.0%';
+  const mean = N ? (d.students.reduce((t, s) => t + s.score, 0) / N).toFixed(2) : '0.00';
+
+  let scoreRows = '';
+  let cum = 0;
+  for (let s = 0; s <= total; s++) {
+    const f = d.scoreFreq[s] || 0;
+    if (!f) continue;
+    cum += f;
+    scoreRows += `<tr><td>${s} / ${total}</td><td>${f}</td><td>${pct(f, N)}</td><td>${cum}</td><td>${pct(cum, N)}</td></tr>`;
+  }
+  if (!scoreRows) scoreRows = '<tr><td colspan="5">No submitted exams yet.</td></tr>';
+
+  let itemRows = '';
+  QUESTIONS.forEach((q, i) => {
+    const c = d.itemCorrect[i];
+    const p = N ? c / N : 0;
+    const diff = p >= 0.7 ? 'Easy' : (p >= 0.3 ? 'Moderate' : 'Difficult');
+    itemRows += `<tr><td>${i + 1}</td><td>${e(q.q)}</td><td>${e(q.a[0])}</td><td>${c}</td><td>${pct(c, N)}</td><td>${diff}</td></tr>`;
+  });
+
+  const secs = {};
+  d.students.forEach(s => {
+    const k = s.section || 'No section';
+    (secs[k] = secs[k] || []).push(s.score);
+  });
+  const secRows = Object.keys(secs).sort().map(k => {
+    const arr = secs[k];
+    const m = (arr.reduce((t, x) => t + x, 0) / arr.length).toFixed(2);
+    return `<tr><td>${e(k)}</td><td>${arr.length}</td><td>${m}</td><td>${Math.max(...arr)}</td><td>${Math.min(...arr)}</td></tr>`;
+  }).join('') || '<tr><td colspan="5">No submitted exams yet.</td></tr>';
+
+  const studentRows = d.students.slice()
+    .sort((a, b) => a.section.localeCompare(b.section) || a.name.localeCompare(b.name))
+    .map(s => `<tr><td>${e(s.section)}</td><td>${e(s.no)}</td><td>${e(s.name)}</td><td>${s.score} / ${total}</td><td>${pct(s.score, total)}</td></tr>`)
+    .join('') || '<tr><td colspan="5">No submitted exams yet.</td></tr>';
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  body { font-family: Arial, sans-serif; font-size: 10pt; color: #111; }
+  h1 { font-size: 16pt; margin: 0 0 4px; }
+  h2 { font-size: 12pt; margin: 18px 0 6px; border-bottom: 1px solid #999; padding-bottom: 3px; }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 8px; }
+  th, td { border: 1px solid #888; padding: 4px; vertical-align: top; text-align: left; }
+  th { background: #e5e7eb; }
+  .sum td { border: none; padding: 2px 10px 2px 0; }
+</style></head><body>
+<h1>${e(EXAM_TITLE)}</h1>
+<div>Professor: Dr. Jerwin Montellano &middot; Elective 3: E-Commerce</div>
+<div>Report generated: ${e(stamp)}</div>
+
+<h2>Summary</h2>
+<table class="sum">
+  <tr><td>Students on roster</td><td>${d.rosterCount}</td></tr>
+  <tr><td>Submitted</td><td>${N}</td></tr>
+  <tr><td>In progress</td><td>${d.inProgress}</td></tr>
+  <tr><td>Not yet started</td><td>${d.notStarted}</td></tr>
+  <tr><td>Mean score (submitted)</td><td>${mean} / ${total}</td></tr>
+</table>
+
+<h2>Score Frequency Distribution</h2>
+<table>
+  <tr><th>Score</th><th>Frequency</th><th>Percent</th><th>Cumulative frequency</th><th>Cumulative percent</th></tr>
+  ${scoreRows}
+</table>
+
+<h2>Item Analysis (Frequency of Correct Answers)</h2>
+<table>
+  <tr><th>No.</th><th>Item</th><th>Answer key</th><th>Correct (frequency)</th><th>Percent correct</th><th>Difficulty</th></tr>
+  ${itemRows}
+</table>
+
+<h2>Section Summary</h2>
+<table>
+  <tr><th>Section</th><th>Submitted</th><th>Mean</th><th>Highest</th><th>Lowest</th></tr>
+  ${secRows}
+</table>
+
+<h2>Student Results</h2>
+<table>
+  <tr><th>Section</th><th>Student No</th><th>Name</th><th>Score</th><th>Percent</th></tr>
+  ${studentRows}
+</table>
+</body></html>`;
+}
